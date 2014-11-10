@@ -57,3 +57,5 @@ To-Do
 =====
 
 - Set limits on the default variable values
+
+- Kill previous instance of notification bubble if program is called multiple times
