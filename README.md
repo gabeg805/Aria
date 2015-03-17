@@ -32,7 +32,14 @@ $ ./noti -t "Title" -b "Body"
 Installation
 ============
 
-Unknown
+Recompile the binary and update your PATH environment variable in your shell rc file
+with:
+    
+    $ rm noti
+    $ make
+    $ export PATH="${PATH}":"/PATH/TO/PROGRAM/noti"
+
+Now the program is ready for use!
 
 
 
@@ -40,7 +47,7 @@ Unknown
 Contacts
 ========
 
-If you have any problems, feel free to email me at 'gabeg at bu dot edu'.
+If you have any problems, feel free to email me at 'gabeg@bu.edu'.
 
 
 
