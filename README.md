@@ -65,4 +65,6 @@ To-Do
 
 - Set limits on the default variable values
 
-- Kill previous instance of notification bubble if program is called multiple times
+- Be able to handle multiple bubbles being opened up at one time.
+
+- Create a .config file to hold default values.
