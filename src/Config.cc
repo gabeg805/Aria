@@ -22,9 +22,11 @@
 #include "../hdr/Config.h"
 
 #include <iostream>
-#include <string>
+#include <algorithm>
+#include <cctype>
 #include <fstream>
 #include <sstream>
+#include <string>
 #include <vector>
 
 
@@ -57,9 +59,16 @@ std::string Config::fetch(std::string file, std::string key) {
     // Loop through file line by line
     while ( std::getline(is, line) ) {
         
+        // Ignore commented lines
+        if ( line.length() >= 2 ) {
+            if ( line.at(0) == '#' )
+                continue;
+        }
+        
         // Parse line for correct key
-        size_t loc            = line.find(delimiter);
-        std::string setting   = line.substr(0, loc);
+        size_t loc          = line.find(delimiter);
+        std::string setting = line.substr(0, loc);
+        setting.erase(std::remove(setting.begin(), setting.end(), ' '), setting.end());
         
         if ( setting.compare(key) != 0 )
             continue;

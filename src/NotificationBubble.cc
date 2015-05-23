@@ -22,6 +22,7 @@
 #include "../hdr/NotificationBubble.h"
 #include "../hdr/Config.h"
 
+#include <X11/Xlib.h>
 #include <gtkmm.h>
 #include <gdkmm.h>
 #include <pangomm/fontdescription.h>
@@ -54,8 +55,8 @@ NotificationBubble::NotificationBubble() :
     def["margin"]     = "0";
     def["title-size"] = "16";
     def["body-size"]  = "12";
-    def["foreground"] = "#000000";
     def["background"] = "#FFFFFF";
+    def["foreground"] = "#000000";
     
     attr["program"]    = "";
     attr["title"]      = "";
@@ -70,8 +71,8 @@ NotificationBubble::NotificationBubble() :
     attr["margin"]     = "";
     attr["title-size"] = "";
     attr["body-size"]  = "";
-    attr["foreground"] = "";
     attr["background"] = "";
+    attr["foreground"] = "";
 }
 
 
@@ -85,6 +86,7 @@ void NotificationBubble::usage() {
     std::cout << "Usage: " << attr["program"] << " [option] <argument>\n"
               << "\n"
               << "Options:" << std::endl
+              << "    -h, --help                   Print program usage message\n"
               << "    -t, --title <text>           Title text\n"
               << "    -b, --body <text>            Body text\n"
               << "    -w, --width <size>           Width size\n"
@@ -97,8 +99,8 @@ void NotificationBubble::usage() {
               << "    -f, --font <font>            Text font\n"
               << "    -ts, --title-size <size>     Size of text for the title\n"
               << "    -bs, --body-size <size>      Size of text for the body\n"
-              << "    -fg, --foreground <color>    Color of the text\n"
               << "    -bg, --background <color>    Color of the notification bubble\n"
+              << "    -fg, --foreground <color>    Color of the text\n"
               << "\n"
               << "Arguments:\n"
               << "    <text>                       Text to display\n"
@@ -154,10 +156,10 @@ void NotificationBubble::init(int argc, char** argv) {
             attr["title_size"] = argv[i+1];
         else if ( (str.compare("-bs") == 0) || (str.compare("--body-size") == 0) ) 
             attr["body_size"] = argv[i+1];
-        else if ( (str.compare("-fg") == 0) || (str.compare("--foreground") == 0) ) 
-            attr["foreground"] = argv[i+1]; 
         else if ( (str.compare("-bg") == 0) || (str.compare("--background") == 0) ) 
             attr["background"] = argv[i+1]; 
+        else if ( (str.compare("-fg") == 0) || (str.compare("--foreground") == 0) ) 
+            attr["foreground"] = argv[i+1]; 
         else
             ;
         
@@ -174,11 +176,13 @@ void NotificationBubble::init(int argc, char** argv) {
         if ( value.compare("") == 0 ) {
             attr[key] = Config::fetch(key);
             
-            bool isEmpty      = (attr[key].compare("") == 0);
-            bool isTitleEmpty = (key.compare("title") == 0);
-            bool isBodyEmpty  = (key.compare("body") == 0);
+            bool isEmpty       = (attr[key].compare("") == 0);
+            bool isTitleEmpty  = (key.compare("title") == 0);
+            bool isBodyEmpty   = (key.compare("body") == 0);
+            bool isWidthEmpty  = (key.compare("width") == 0);
+            bool isHeightEmpty = (key.compare("height") == 0);
             
-            if ( isEmpty && !isTitleEmpty && !isBodyEmpty ) 
+            if ( isEmpty && !isTitleEmpty && !isBodyEmpty && !isWidthEmpty && !isHeightEmpty )
                 attr[key] = def[key];
         } 
     }
@@ -204,9 +208,18 @@ void NotificationBubble::create() {
     Gdk::RGBA fore(attr["foreground"]);
     
     // Define variables to be used in setup
+    // Display* dpy = XOpenDisplay(0);
+    // int ass = DefaultRootWindow(dpy).width;
+    
+    Display *dpy = XOpenDisplay(NULL);
+    int screen = DisplayWidth( dpy, DefaultScreen(dpy) );
+    int w = 0;
+    int h = 0;
+    this->get_size((int&)w, (int&)h);
+    
     int width         = atoi( attr["width"].c_str() );
     int height        = atoi( attr["height"].c_str() );
-    int xpos          = atoi( attr["xpos"].c_str() );
+    int xpos          = (screen - w) - atoi( attr["xpos"].c_str() );
     int ypos          = atoi( attr["ypos"].c_str() );
     int timer         = atoi( attr["timer"].c_str() );
     int margin        = atoi( attr["margin"].c_str() );
@@ -215,7 +228,9 @@ void NotificationBubble::create() {
     
     // Setup the notification bubble
     this->set_title("Aria");
-    this->set_default_size( width, height );
+    if ( width && height ) {
+        this->set_default_size( width, height );
+    }
     this->override_background_color(back, Gtk::STATE_FLAG_NORMAL);
     this->override_color(fore, Gtk::STATE_FLAG_NORMAL);
     this->move( xpos, ypos );
@@ -233,6 +248,8 @@ void NotificationBubble::create() {
         title.set_text( attr["title"] );
         title.override_font( title_fd );
         title.override_color( fore );
+        title.set_margin_top( margin/2 );
+        title.set_margin_bottom( margin/2 );
         bubble.pack_start(title, Gtk::PACK_SHRINK);
     }
     
@@ -243,6 +260,8 @@ void NotificationBubble::create() {
         body.set_text( attr["body"] );
         body.override_font(body_fd);
         body.override_color(fore);
+        body.set_margin_top( margin/2 );
+        body.set_margin_bottom( margin/2 );
         
         if ( isTitleEmpty )
             bubble.pack_start(body, Gtk::PACK_SHRINK);
