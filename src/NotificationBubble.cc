@@ -136,9 +136,9 @@ void NotificationBubble::init(int argc, char** argv) {
             attr["title"] = argv[i+1];
         else if ( (str.compare("-b") == 0) || (str.compare("--body") == 0) ) 
             attr["body"] = argv[i+1];
-        else if ( (str.compare("-w") == 0) || (str.compare("--width") == 0) ) 
+        else if ( (str.compare("-f") == 0) || (str.compare("--font") == 0) ) 
             attr["font"] = argv[i+1];
-        else if ( (str.compare("-ts") == 0) || (str.compare("--title-size") == 0) ) 
+        else if ( (str.compare("-w") == 0) || (str.compare("--width") == 0) ) 
             attr["width"] = argv[i+1];
         else if ( (str.compare("-h") == 0) || (str.compare("--height") == 0) ) 
             attr["height"] = argv[i+1];
@@ -152,7 +152,7 @@ void NotificationBubble::init(int argc, char** argv) {
             attr["opacity"] = argv[i+1]; 
         else if ( (str.compare("-m") == 0) || (str.compare("--margin") == 0) ) 
             attr["margin"] = argv[i+1]; 
-        else if ( (str.compare("-f") == 0) || (str.compare("--font") == 0) ) 
+        else if ( (str.compare("-ts") == 0) || (str.compare("--title-size") == 0) ) 
             attr["title_size"] = argv[i+1];
         else if ( (str.compare("-bs") == 0) || (str.compare("--body-size") == 0) ) 
             attr["body_size"] = argv[i+1];
@@ -208,19 +208,8 @@ void NotificationBubble::create() {
     Gdk::RGBA fore(attr["foreground"]);
     
     // Define variables to be used in setup
-    // Display* dpy = XOpenDisplay(0);
-    // int ass = DefaultRootWindow(dpy).width;
-    
-    Display *dpy = XOpenDisplay(NULL);
-    int screen = DisplayWidth( dpy, DefaultScreen(dpy) );
-    int w = 0;
-    int h = 0;
-    this->get_size((int&)w, (int&)h);
-    
     int width         = atoi( attr["width"].c_str() );
     int height        = atoi( attr["height"].c_str() );
-    int xpos          = (screen - w) - atoi( attr["xpos"].c_str() );
-    int ypos          = atoi( attr["ypos"].c_str() );
     int timer         = atoi( attr["timer"].c_str() );
     int margin        = atoi( attr["margin"].c_str() );
     int title_size    = atoi( attr["title-size"].c_str() ) * PANGO_SCALE;
@@ -233,7 +222,6 @@ void NotificationBubble::create() {
     }
     this->override_background_color(back, Gtk::STATE_FLAG_NORMAL);
     this->override_color(fore, Gtk::STATE_FLAG_NORMAL);
-    this->move( xpos, ypos );
     
     // Setup the notification bubble container
     bubble.set_margin_top( margin );
@@ -276,6 +264,18 @@ void NotificationBubble::create() {
     Glib::signal_timeout().connect_seconds(sigc::mem_fun(*this, 
                                                          &NotificationBubble::timeout), 
                                            timer);
+    
+    // Set size of the notification bubble
+    Display *dpy = XOpenDisplay(NULL);
+    int screen = DisplayWidth( dpy, DefaultScreen(dpy) );
+    int w = 0;
+    int h = 0;
+    this->get_size((int&)w, (int&)h);
+    
+    int xpos          = (screen - w) - atoi( attr["xpos"].c_str() );
+    int ypos          = atoi( attr["ypos"].c_str() );
+    
+    this->move( xpos, ypos );
 }
 
 
