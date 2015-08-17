@@ -1,41 +1,56 @@
 ## Compiler
 CC      = g++
 LIBS    = gtkmm-3.0
-CFLAGS  = -g -Wall -lX11 -O0  
+CFLAGS  = -g -Wall -lX11 -O0
 CFLAGS += `pkg-config $(LIBS) --cflags --libs`
+CINC    =
 
 ## Program source files
 PROGRAM = aria
-NAMES   = $(PROGRAM) 
-NAMES  += Config NotificationBubble 
-# NAMES  += Battery Wifi Volume Brightness Date Workspace 
-
-## File extensions used
-SRC_EXT = .cc
-HDR_EXT = .h
-OBJ_EXT = .o
+COMMON  = AriaAttribute
+CORE    = $(PROGRAM) AriaNotify
+NAMES   = $(COMMON) $(CORE)  
 
 ## Directories used
-SRC_DIR = ./src
-HDR_DIR = ./hdr
-OBJ_DIR = ./obj
+COMMON_DIR = ./common
+CORE_DIR   = ./core
+SRC_DIR    = ./src
+INC_DIR    = ./include
+OBJ_DIR    = ./obj
+
+COMMON_SRC_DIR = $(COMMON_DIR)/$(SRC_DIR)
+COMMON_INC_DIR = $(COMMON_DIR)/$(INC_DIR)
+CORE_SRC_DIR   = $(CORE_DIR)/$(SRC_DIR)
+CORE_INC_DIR   = $(CORE_DIR)/$(INC_DIR)
+
+CINC += -I $(COMMON_INC_DIR)
+CINC += -I $(CORE_INC_DIR)
 
 ## Add extension to file names
-SRC = $(addprefix $(SRC_DIR)/, $(addsuffix $(SRC_EXT), $(NAMES)))
-HDR = $(addprefix $(HDR_DIR)/, $(addsuffix $(HDR_EXT), $(NAMES)))
-OBJ = $(addprefix $(OBJ_DIR)/, $(addsuffix $(OBJ_EXT), $(NAMES)))
+SRC  = $(addprefix $(COMMON_DIR)/, $(addsuffix .cc, $(COMMON)))
+SRC += $(addprefix $(CORE_DIR)/,   $(addsuffix .cc, $(CORE)))
+OBJ  = $(addprefix $(OBJ_DIR)/,    $(addsuffix .o,  $(NAMES)))
 
 ## Makefile actions
 all: $(PROGRAM)
 
-$(OBJ_DIR)/%$(OBJ_EXT): $(SRC_DIR)/%$(SRC_EXT)
-	$(CC) $(CFLAGS) \
-		-c $< \
-		-o $@
-
 $(PROGRAM): $(OBJ)
 	$(CC) $(CFLAGS) \
-		-o $(PROGRAM) $(OBJ)
+		-o $(PROGRAM) $(OBJ) \
+		$(CINC)
+
+$(OBJ_DIR)/%.o: $(COMMON_SRC_DIR)/%.cc
+	$(CC) $(CFLAGS) \
+		-c $< \
+		-o $@ \
+		$(CINC)
+
+$(OBJ_DIR)/%.o: $(CORE_SRC_DIR)/%.cc
+	$(CC) $(CFLAGS) \
+		-c $< \
+		-o $@ \
+		$(CINC)
+
 
 .PHONY: clean
 clean : 
