@@ -1,0 +1,219 @@
+/* *****************************************************************************
+ * 
+ * Name:    AriaMap.cc
+ * Class:   <AriaMap>
+ * Author:  Gabriel Gonzalez
+ * Email:   gabeg@bu.edu
+ * License: The MIT License (MIT)
+ * 
+ * Description: Create and manage a shared memory region for interprocess
+ *              communication.
+ * 
+ * Notes: None.
+ * 
+ * *****************************************************************************
+ */
+
+/* Includes */
+#include "AriaMap.h"
+#include <stdint.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
+#include <iostream>
+#include <cstddef>
+#include <cstdlib>
+#include <cerrno>
+#include <cstring>
+
+/* Declares */
+static const size_t max_len    = 1 + 2*10;
+static const char  *file   = "ploobmap";
+static const int    prot   = PROT_READ | PROT_WRITE;
+static const int    flags  = MAP_SHARED;
+static const int    map_access = O_RDWR | O_APPEND;
+static const mode_t mode   = 0777;
+static const size_t map_size   = sizeof(long) * max_len;
+static       int    fd     = -1;
+static       long  *addr   = NULL;
+static       bool   is_first   = false;
+static       long   mem[max_len];
+
+/* **********************************
+ * ***** SHARED FILE DESCRIPTOR *****
+ * **********************************
+ */
+
+/* Set memory mapped file descriptor */
+int AriaMap::openfd(void)
+{
+    /* Create shared memory file with read/write access */
+    if ( access(file, F_OK) != 0 ) {
+        fd   = open(file, map_access | O_CREAT, mode);
+        is_first = true;
+    }
+    else {
+        fd   = open(file, map_access, mode);
+        is_first = false;
+    }
+
+    /* Memory mapped file failed to be created, abort */
+    if ( fd < 0 ) {
+        std::cout << "aria: Memory mapped file: " << std::strerror(errno) << std::endl;
+        return -1;
+    }
+
+    std::cout << "file descriptor: " << fd << std::endl;
+
+    return (is_first) ? 1 : 0;
+}
+
+/* Write to the shared memory region */
+int AriaMap::writefd(long *w, size_t s)
+{
+    /* Check for error states */
+    if ( (fd < 0) || (addr == NULL) )
+        return -1;
+
+    /* Write to the share memory region */
+    std::cout << "das length0: " << length() << std::endl;
+    write(fd, w, s);
+    std::cout << "seek: " << lseek(fd, 0, SEEK_CUR) << std::endl;
+    std::cout << "wrote: " << *w << " | size: " << s << std::endl;
+    long len = length();
+    long i;
+
+    for ( i = 0; i < len; ++i )
+        std::cout << "i: " << i << " | write val: " << addr[i] << std::endl;
+    return 0;
+}
+
+/* Read the shared memory region */
+int AriaMap::readfd(long *r, size_t s)
+{
+    // read(fd, r, s);
+    std::cout << "read val: " << (int)addr[0] << std::endl;
+    return addr[0];
+    // return 0;
+}
+
+int AriaMap::set(long val)
+{
+    static bool first = true;
+
+    if ( first ) {
+        first = false;
+        read(fd, mem, map_size);
+        size_t i;
+        for ( i = 0; i < map_size; ++i )
+            std::cout << "set read: " << mem[i] << std::endl;
+    }
+
+    size_t index = next();
+    std::cout << "index: " << index << std::endl;
+    mem[index] = val;
+    mem[0] += 1;
+    size_t i;
+    for ( i = 0; i < map_size; ++i )
+        std::cout << "set: " << mem[i] << std::endl;
+    return 0;
+}
+
+int AriaMap::store(long a, long b)
+{
+    openfd();
+    map();
+
+    /* Set initial size value */
+    if ( is_first ) {
+        clear();
+        is_first = false;
+        long val = 1;
+        std::cout << "initial write val: " << val << std::endl;
+        std::cout << "init seek: " << lseek(fd, 0, SEEK_CUR) << std::endl;
+        write(fd, &val, sizeof(val));
+        std::cout << "seek: " << lseek(fd, 0, SEEK_CUR) << std::endl;
+    }
+
+    set(a);
+    set(b);
+    writefd(&a, sizeof(a));
+    std::cout << "das length1: " << length() << std::endl;
+    writefd(&b, sizeof(b));
+    std::cout << "das length2: " << length() << std::endl;
+    unmap();
+
+    return 0;
+}
+
+/* *************************
+ * ***** MAPPED MEMORY *****
+ * *************************
+ */
+
+/* Set shared memory mapped region */
+int AriaMap::map(void)
+{
+    addr = (long *) mmap(NULL, map_size, prot, flags, fd, 0);
+
+    if ( addr == MAP_FAILED ) {
+        std::cout << "aria: Memory mapped region: " << std::strerror(errno) << std::endl;
+        return -1;
+    }
+
+    return 0;
+}
+
+/* Unmap shared memory region */
+int AriaMap::unmap(void)
+{
+    int status = munmap(addr, map_size);
+
+    if ( status < 0 )
+        std::cout << "aria: Memory unmapping: " << std::strerror(errno) << std::endl;
+    close(fd);
+    return 0;
+}
+
+/* *********************
+ * ***** UTILITIES *****
+ * *********************
+ */
+
+/* Size of the shared memory region */
+size_t AriaMap::length(void)
+{
+    if ( addr == NULL )
+        return 0;
+    else {
+        std::cout << "length: " << (size_t) addr[0] << std::endl;
+        return (size_t) addr[0];
+    }
+}
+
+/* Clear shared memory region */
+int AriaMap::clear(void)
+{
+    if ( addr == NULL )
+        return -1;
+    else {
+        lseek(fd, 0, SEEK_SET);
+        size_t i;
+        for ( i = 0; i < max_len; ++i )
+            mem[i] = -1;
+        write(fd, mem, map_size);
+        return 0;
+    }
+}
+
+/* Find next open index in memory array */
+size_t AriaMap::next(void)
+{
+    size_t i;
+    for ( i = 0; i < max_len; ++i )
+        if ( mem[i] == -1 )
+            return i;
+    return 0;
+}

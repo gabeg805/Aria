@@ -7,7 +7,7 @@
  * License: The MIT License (MIT)
  * 
  * Description: The Aria Notification Bubble.
- *              
+ * 
  * Notes: None.
  * 
  * *****************************************************************************
@@ -16,6 +16,7 @@
 /* Includes */
 #include "AriaNotify.h"
 #include "AriaAttribute.h"
+#include "AriaMap.h"
 #include <X11/Xlib.h>
 #include <gtkmm.h>
 #include <gdkmm.h>
@@ -24,6 +25,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <string>
+#include <unistd.h>
 
 /* ***************************************
  * ***** DISPLAY NOTIFICATION BUBBLE *****
@@ -182,6 +184,7 @@ void AriaNotify::set_timer(void)
 bool AriaNotify::timeout()
 {
     std::cout << "Timeout hiding" << std::endl;
+    AriaMap::clean();
     hide();
     return true;
 }
@@ -228,11 +231,38 @@ void AriaNotify::set_notify_text(std::string key)
     }
 }
 
-/* ************************************
- * ***** SET NOTIFICATION SPACING *****
- * ************************************
+/* *******************************************
+ * ***** SET/GET NOTIFICATION DIMENSIONS *****
+ * *******************************************
  */
 
+/* Spatial positioning */
+int get_xpos(void)
+{
+    static int xpos = atoi(AriaAttribute::get("xpos").c_str());
+    return xpos;
+}
+
+int get_ypos(void)
+{
+    static int ypos = atoi(AriaAttribute::get("ypos").c_str());
+    return ypos;
+}
+
+/* Dimensions */
+int get_width(void)
+{
+    static int width = atoi(AriaAttribute::get("width").c_str());
+    return width;
+}
+
+int get_height(void)
+{
+    static int height = atoi(AriaAttribute::get("height").c_str());
+    return height;
+}
+
+/* Dimensional and spatial setters */
 void AriaNotify::set_position(void)
 {
     Display *dpy    = XOpenDisplay(NULL);
@@ -240,16 +270,25 @@ void AriaNotify::set_position(void)
     int      w      = 0;
     int      h      = 0;
     this->get_size((int&)w, (int&)h);
+    int      x      = (screen - w) - get_xpos();
+    long      y      = get_ypos();
 
-    int x = (screen - w) - atoi(AriaAttribute::get("xpos").c_str());
-    int y = atoi(AriaAttribute::get("ypos").c_str());
+    AriaMap::openfd();
+    AriaMap::map();
+    AriaMap::copy();
+    AriaMap::displace(h, &y);
+    AriaMap::store(getpid());
+    AriaMap::store(h);
+    AriaMap::store(y);
+    AriaMap::unmap();
+
     this->move(x, y);
 }
 
 void AriaNotify::set_size(void)
 {
-    int width  = atoi(AriaAttribute::get("width").c_str());
-    int height = atoi(AriaAttribute::get("height").c_str());
+    int width  = get_width();
+    int height = get_height();
     if ( width && height )
         this->set_default_size(width, height);
 }

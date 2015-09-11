@@ -8,7 +8,7 @@ CINC    =
 ## Program source files
 PROGRAM = aria
 COMMON  = AriaAttribute
-CORE    = $(PROGRAM) AriaNotify
+CORE    = $(PROGRAM) AriaNotify AriaMap
 NAMES   = $(COMMON) $(CORE)  
 
 ## Directories used
