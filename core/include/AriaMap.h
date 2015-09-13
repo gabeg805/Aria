@@ -20,24 +20,38 @@
 /* Includes */
 #include <cstddef>
 
+struct MapData {
+    long id;
+    long w;
+    long h;
+    long x;
+    long y;
+};
+
 /* Classes */
 namespace AriaMap
 {
-    int  store(long val);
-    int  displace(long h, long *y);
-    int  copy(void);
-    int  openfd(void);
-    int  writefd(long *w, size_t s);
-    int  readfd(long *r, size_t s);
-    int  clearfd(void);
-    int  map(void);
-    int  unmap(void);
-    void print(void);
-    int  find(long val);
-    int  length(void);
-    int  clean(void);
-    int  clear(void);
-    int  clear(long start, long len);
+    int    store(struct MapData *data, long shift);
+    int    displace(struct MapData *data, long shift);
+    int    cleanup(void);
+
+    int    openfd(void);
+    int    writefd(struct MapData *w, size_t s);
+    int    readfd(struct MapData *r, size_t s);
+    int    clearfd(void);
+
+    int    map(void);
+    int    unmap(void);
+
+    int    insert(struct MapData *data);
+    int    copy(bool status);
+    int    find(long val);
+    void   clear(void);
+    void   clear(long start, long len);
+    size_t size(void);
+    size_t length(void);
+
+    void   print(void);
 };
 
 #endif /* ARIA_MAP_H */

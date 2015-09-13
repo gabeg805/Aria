@@ -184,7 +184,7 @@ void AriaNotify::set_timer(void)
 bool AriaNotify::timeout()
 {
     std::cout << "Timeout hiding" << std::endl;
-    AriaMap::clean();
+    AriaMap::cleanup();
     hide();
     return true;
 }
@@ -270,19 +270,15 @@ void AriaNotify::set_position(void)
     int      w      = 0;
     int      h      = 0;
     this->get_size((int&)w, (int&)h);
-    int      x      = (screen - w) - get_xpos();
-    long      y      = get_ypos();
 
-    AriaMap::openfd();
-    AriaMap::map();
-    AriaMap::copy();
-    AriaMap::displace(h, &y);
-    AriaMap::store(getpid());
-    AriaMap::store(h);
-    AriaMap::store(y);
-    AriaMap::unmap();
+    int      x          = get_xpos();
+    long     y          = get_ypos();
+    pid_t    pid        = getpid();
+    struct MapData data = {.id=pid, .w=w, .h=h, .x=x, .y=y};
+    AriaMap::store(&data, 10);
 
-    this->move(x, y);
+    data.x = (screen - w) - data.x;
+    this->move(data.x, data.y);
 }
 
 void AriaNotify::set_size(void)

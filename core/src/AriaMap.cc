@@ -28,27 +28,19 @@
 #include <cerrno>
 #include <cstring>
 #include <stdio.h>
-
-/* CAN ALSO USE FLOCK FOR LOCKING */
+#include <sys/file.h>
 
 /* Declares */
-static const size_t max_len    = 1 + 2*10; /* change file size according to data */
-
-static const char  *MFILE   = "ploobmap";
-static const int    MPROT   = PROT_READ | PROT_WRITE;
-static const int    MFLAGS  = MAP_SHARED; /* Map anonymous flag */
-static const size_t MSIZE   = sizeof(long) * max_len;
-
-static       int    FFLAGS = O_RDWR; // | O_APPEND;
-static const mode_t FMODE   = 0777;
-
-static       int    fd     = -1;
-static       long  *addr   = NULL;
-static       bool   is_first   = false;
-static       long   mem[max_len];
-static       long   space      = 10;
-// static       size_t start   = 0;
-static       size_t counter = 0;
+static const  char   *MFILE   = "ploobmap";
+static const  int     MPROT   = PROT_READ | PROT_WRITE;
+static const  int     MFLAGS  = MAP_SHARED;
+static const  size_t  MLEN    = 2*10;
+static const  size_t  MSIZE   = MLEN * sizeof(struct MapData);
+static        long   *MADDR   = NULL;
+static const  mode_t  FMODE   = 0777;
+static        int     FFLAGS  = O_RDWR;
+static        int     FD      = -1;
+static struct MapData MEM[MLEN];
 
 void checkery(int ret, const char *str, int err)
 {
@@ -77,49 +69,82 @@ void checkery(void *ptr, const char *str, int err)
  * **********************************
  */
 
-/* Store data in the local copy of the mapped memory */
-int AriaMap::store(long val)
+/* Store data in mapped memory */
+int AriaMap::store(struct MapData *data, long shift)
 {
-    if ( (fd < 0) || (addr == NULL) || (length() == max_len) )
-        return -1;
-
-    int    len   = length();
-    size_t index = (len == 0) ? 0 : len-1;
-    mem[index] = val;
-    ++counter;
-
+    int status;
+    int ret;
+    if ( (status=AriaMap::openfd()) < 0 )
+        return status;
+    if ( (ret=AriaMap::map()) < 0 )
+        return ret;
+    if ( (ret=AriaMap::copy(status)) < 0 )
+        return ret;
+    if ( (ret=AriaMap::displace(data, shift)) < 0 )
+        return ret;
+    if ( (ret=AriaMap::insert(data)) < 0 )
+        return ret;
+    if ( (ret=AriaMap::unmap()) < 0 )
+        return ret;
     return 0;
 }
 
 /* Shift y coordinate of notification bubble location */
-int AriaMap::displace(long h, long *y)
+int AriaMap::displace(struct MapData *data, long shift)
 {
-    long   pos  = *y;
-    long   orig = pos;
-    long   size;
+    long   x0 = data->x;
+    long   y0 = data->y;
+    long   x  = x0;
+    long   y  = y0;
+    long   xsize;
+    long   ysize;
     size_t i;
-    for ( i = 0; i < max_len; i+=3 ) {
-        if ( mem[i] == -1 )
+    for ( i = 0; i < MLEN; ++i ) {
+        if ( MEM[i].id == 0 )
             break;
 
-        size = mem[i+1] + mem[i+2];
-        if ( size >= pos )
-            pos = size;
+        xsize = MEM[i].w + MEM[i].x;
+        ysize = MEM[i].h + MEM[i].y;
+        x     = (xsize > x) ? xsize : x;
+        y     = (ysize > y) ? ysize : y;
     }
 
-    *y = (pos != orig) ? (pos + space) : orig;
+    data->x = (x != x0) ? (x + shift) : x0;
+    data->y = (y != y0) ? (y + shift) : y0;
     return 0;
 }
 
-/* Copy mapped memory to local data copy */
-int AriaMap::copy(void)
+/* Clean up used mapped memory */
+int AriaMap::cleanup(void)
 {
-    if ( is_first ) {
-        clearfd();
-        is_first = false;
+    std::cout << "Cleaning..." << std::endl;
+
+    openfd();
+    map();
+    clear();
+    readfd(MEM, MSIZE);
+    print();
+    pid_t pid   = getpid();
+    long  start = find(pid);
+    clear(start, 1);
+
+    size_t i;
+    size_t j = 0;
+    for ( i = start+1; i < MLEN; ++i ) {
+        if ( MEM[i].id == 0 ) {
+            std::cout << "break" << std::endl;
+            std::cout << "start: " << start << std::endl;
+            break;
+        }
+
+        MEM[start+j] = MEM[i];
+        memset(&MEM[i], 0, sizeof(*MEM));
+        ++j;
     }
 
-    readfd(mem, MSIZE);
+    writefd(MEM, MSIZE);
+    print();
+    unmap();
 
     return 0;
 }
@@ -132,58 +157,53 @@ int AriaMap::copy(void)
 /* Set memory mapped file descriptor */
 int AriaMap::openfd(void)
 {
-    /* Check existence of shared memory file */
+    bool first = false;
     int status = access(MFILE, F_OK);
     if ( status < 0 ) {
-        FFLAGS  |= O_CREAT;
-        is_first = true;
-        /* std::cout
-            << "aria: Map file access: "
-            << std::strerror(errno)
-            << std::endl; */
+        FFLAGS |= O_CREAT;
+        first   = true;
     }
 
-    /* Open shared memory file */
-    fd = open(MFILE, FFLAGS, FMODE);
-    if ( fd < 0 ) {
-        checkery(fd, "open", errno);
+    FD = open(MFILE, FFLAGS, FMODE);
+    if ( FD < 0 ) {
+        checkery(FD, "open", errno);
         return -1;
     }
 
-    return (int) is_first;
+    status = flock(FD, LOCK_EX);
+    checkery(status, "flock", errno);
+    return first;
 }
 
 /* Write to the shared memory region */
-int AriaMap::writefd(long *w, size_t s)
+int AriaMap::writefd(struct MapData *w, size_t s)
 {
-    if ( (fd < 0) || (addr == NULL) )
+    if ( (FD < 0) || (MADDR == NULL) )
         return -1;
 
     int status;
-    status = lseek(fd, 0, SEEK_SET);
+    status = lseek(FD, 0, SEEK_SET);
     checkery(status, "lseek", errno);
-    status = write(fd, w, s);
+    status = write(FD, w, s);
     checkery(status, "write", errno);
-    status = lseek(fd, 0, SEEK_SET);
+    status = lseek(FD, 0, SEEK_SET);
     checkery(status, "lseek", errno);
-
     return 0;
 }
 
 /* Read memory mapped region */
-int AriaMap::readfd(long *r, size_t s)
+int AriaMap::readfd(struct MapData *r, size_t s)
 {
-    if ( (fd < 0) || (addr == NULL) )
+    if ( (FD < 0) || (MADDR == NULL) )
         return -1;
 
     int status;
-    status = lseek(fd, 0, SEEK_SET);
+    status = lseek(FD, 0, SEEK_SET);
     checkery(status, "lseek", errno);
-    status = read(fd, r, s);
+    status = read(FD, r, s);
     checkery(status, "read", errno);
-    status = lseek(fd, 0, SEEK_SET);
+    status = lseek(FD, 0, SEEK_SET);
     checkery(status, "lseek", errno);
-
     return 0;
 }
 
@@ -191,8 +211,7 @@ int AriaMap::readfd(long *r, size_t s)
 int AriaMap::clearfd(void)
 {
     clear();
-    writefd(mem, MSIZE);
-    return 0;
+    return writefd(MEM, MSIZE);
 }
 
 /* *************************
@@ -203,19 +222,13 @@ int AriaMap::clearfd(void)
 /* Setup shared memory mapped region */
 int AriaMap::map(void)
 {
-    if ( fd < 0 )
+    if ( FD < 0 )
         return -1;
 
-    addr = (long *) mmap(NULL, MSIZE, MPROT, MFLAGS, fd, 0);
-    if ( addr == MAP_FAILED ) {
-        checkery(addr, "mmap", errno);
+    MADDR = (long *) mmap(NULL, MSIZE, MPROT, MFLAGS, FD, 0);
+    if ( MADDR == MAP_FAILED ) {
+        checkery(MADDR, "mmap", errno);
         return -1;
-    }
-
-    if ( is_first ) {
-        clearfd();
-        int status = mlock(addr, MSIZE);
-        checkery(status, "mlock", errno);
     }
 
     return 0;
@@ -224,17 +237,90 @@ int AriaMap::map(void)
 /* Unmap shared memory region */
 int AriaMap::unmap(void)
 {
-    if ( fd < 0 )
+    if ( FD < 0 )
         return -1;
 
-    size_t len = length()-1;
-    write(fd, mem, len*sizeof(long));
-
-    int status = munmap(addr, MSIZE);
+    size_t s = size();
+    write(FD, MEM, s);
+    int status = munmap(MADDR, MSIZE);
     checkery(status, "munmap", errno);
-    close(fd);
-
+    close(FD);
     return 0;
+}
+
+
+/* ****************************************
+ * ***** DATA STRUCTURE FUNCTIONALITY *****
+ * ****************************************
+ */
+
+/* Insert data into the local copy of the mapped memory */
+int AriaMap::insert(struct MapData *data)
+{
+    int len = length();
+    if ( (FD < 0) || (MADDR == NULL) || (len == MLEN) )
+        return -1;
+
+    size_t index = (len == 0) ? 0 : len-1;
+    MEM[index]   = *data;
+    return 0;
+}
+
+
+/* Copy mapped memory to local copy */
+int AriaMap::copy(bool status)
+{
+    int ret = (status) ? clearfd() : 0;
+    return (ret == 0) ? readfd(MEM, MSIZE) : -1;
+}
+
+/* Find data in local mapped memory copy */
+int AriaMap::find(long val)
+{
+    size_t i;
+    for ( i = 0; i < MLEN; ++i )
+        if ( MEM[i].id == val )
+            return i;
+    return -1;
+}
+
+/* Clear local mapped memory copy */
+void AriaMap::clear(void)
+{
+    size_t i;
+    for ( i = 0; i < MLEN; ++i )
+        memset(&MEM[i], 0, sizeof(*MEM));
+}
+
+void AriaMap::clear(long start, long len)
+{
+    size_t size = start+len;
+    size_t i;
+    for ( i = start; (i < size) && (i < MLEN); ++i )
+        memset(&MEM[i], 0, sizeof(*MEM));
+}
+
+/* Size of the local mapped memory copy */
+size_t AriaMap::size(void)
+{
+    if ( (FD < 0) || (MADDR == NULL) )
+        return 0;
+
+    int len = length();
+    return (len == 0) ? 0 : (len-1)*sizeof(*MEM);
+}
+
+/* Length of the local mapped memory copy */
+size_t AriaMap::length(void)
+{
+    if ( (FD < 0) || (MADDR == NULL) )
+        return 0;
+
+    size_t i;
+    for ( i = 0; i < MLEN; ++i )
+        if ( MEM[i].id == 0 )
+            return i+1;
+    return i;
 }
 
 /* *********************
@@ -246,91 +332,18 @@ int AriaMap::unmap(void)
 void AriaMap::print(void)
 {
     size_t i;
-    for ( i = 0; i < max_len; ++i )
+    for ( i = 0; i < MLEN; ++i )
         std::cout
             << "i: " << i
-            << " | mem[i]: "
-            << mem[i]
+            << " | MEM[i]: "
+            << MEM[i].id
+            << " "
+            << MEM[i].w
+            << " "
+            << MEM[i].h
+            << " "
+            << MEM[i].x
+            << " "
+            << MEM[i].y
             << std::endl;
-}
-
-/* Find item in local mapped memory copy */
-int AriaMap::find(long val)
-{
-    size_t i;
-    for ( i = 0; i < max_len; ++i )
-        if ( mem[i] == val )
-            return i;
-    return -1;
-}
-
-/* Size of the shared memory region */
-int AriaMap::length(void)
-{
-    if ( (fd < 0) || (addr == NULL) )
-        return -1;
-
-    size_t i;
-    for ( i = 0; i < max_len; ++i )
-        if ( mem[i] == -1 )
-            return i+1;
-    return i;
-}
-
-/* Clean up used mapped memory */
-int AriaMap::clean(void)
-{
-    std::cout << "Cleaning..." << std::endl;
-    openfd();
-    map();
-    clear();
-    readfd(mem, MSIZE);
-    print();
-    pid_t pid   = getpid();
-    long  start = find(pid);
-    clear(start, counter);
-
-    size_t i;
-    size_t j = 0;
-    for ( i = start+counter; i < max_len; ++i ) {
-        if ( mem[i] == -1 ) {
-            std::cout << "break" << std::endl;
-            std::cout << "start: " << start << std::endl;
-            std::cout << "counter: " << counter << std::endl;
-            break;
-        }
-        mem[start+j] = mem[i];
-        mem[i]       = -1;
-        ++j;
-    }
-
-    writefd(mem, MSIZE);
-    print();
-    unmap();
-    start   = 0;
-    counter = 0;
-
-    return 0;
-}
-
-/* Clear local mapped memory copy */
-int AriaMap::clear(void)
-{
-    if ( (fd < 0) || (addr == NULL) )
-        return -1;
-
-    size_t i;
-    for ( i = 0; i < max_len; ++i )
-        mem[i] = -1;
-
-    return 0;
-}
-
-int AriaMap::clear(long start, long len)
-{
-    size_t size = start+len;
-    size_t i;
-    for ( i = start; (i < size) && (i < max_len); ++i )
-        mem[i] = -1;
-    return 0;
 }
