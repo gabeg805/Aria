@@ -270,11 +270,11 @@ void AriaNotify::set_position(void)
     int      w      = 0;
     int      h      = 0;
     this->get_size((int&)w, (int&)h);
-
+    /* Catch signals and redirect to timeout() */
     int      x          = get_xpos();
     long     y          = get_ypos();
     pid_t    pid        = getpid();
-    struct MapData data = {.id=pid, .w=w, .h=h, .x=x, .y=y};
+    struct MapData data = {.id=pid, .x=x, .y=y, .w=w, .h=h};
     AriaMap::store(&data, 10);
 
     data.x = (screen - w) - data.x;

@@ -22,10 +22,10 @@
 
 struct MapData {
     long id;
-    long w;
-    long h;
     long x;
     long y;
+    long w;
+    long h;
 };
 
 /* Classes */

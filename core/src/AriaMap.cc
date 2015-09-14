@@ -92,25 +92,46 @@ int AriaMap::store(struct MapData *data, long shift)
 /* Shift y coordinate of notification bubble location */
 int AriaMap::displace(struct MapData *data, long shift)
 {
-    long   x0 = data->x;
-    long   y0 = data->y;
-    long   x  = x0;
-    long   y  = y0;
-    long   xsize;
-    long   ysize;
+    long   x      = data->x;
+    long   y      = data->y;
+    long   w      = data->w;
+    long   h      = data->h;
+    long   xcur   = 0;
+    long   ycur   = 0;
+    long   xnew   = x;
+    long   ynew   = y;
+    long   xavail = x;
+    long   yavail = y;
     size_t i;
     for ( i = 0; i < MLEN; ++i ) {
         if ( MEM[i].id == 0 )
             break;
 
-        xsize = MEM[i].w + MEM[i].x;
-        ysize = MEM[i].h + MEM[i].y;
-        x     = (xsize > x) ? xsize : x;
-        y     = (ysize > y) ? ysize : y;
+        xcur = MEM[i].x + MEM[i].w + shift;
+        ycur = MEM[i].y + MEM[i].h + shift;
+        xnew = xavail   + w        + shift;
+        ynew = yavail   + h        + shift;
+
+        if ( (ynew > MEM[i].y) && (ycur > yavail) ) {
+            yavail = ycur;
+            // if ( (xnew > MEM[i].x) && (xcur > xavail) ) 
+            //     xavail = xcur;
+        }
+
+        // std::cout
+        //     << "i: " << i << " | "
+        //     << "memy: " << MEM[i].y << " | "
+        //     << "memh: " << MEM[i].h << " | "
+        //     << "yavail: " << yavail
+        //     << std::endl;
     }
 
-    data->x = (x != x0) ? (x + shift) : x0;
-    data->y = (y != y0) ? (y + shift) : y0;
+    /* This shifts the x over like crazy, still 
+     * needs to make sure that there is no overlap
+     * The algorithm doesn't work as expected */
+    // data->x = (xavail == x) ? (x + shift) : xavail;
+    data->y = (yavail == y) ? (y + shift) : yavail;
+
     return 0;
 }
 
@@ -123,7 +144,7 @@ int AriaMap::cleanup(void)
     map();
     clear();
     readfd(MEM, MSIZE);
-    print();
+    // print();
     pid_t pid   = getpid();
     long  start = find(pid);
     clear(start, 1);
@@ -143,7 +164,7 @@ int AriaMap::cleanup(void)
     }
 
     writefd(MEM, MSIZE);
-    print();
+    // print();
     unmap();
 
     return 0;
@@ -338,12 +359,12 @@ void AriaMap::print(void)
             << " | MEM[i]: "
             << MEM[i].id
             << " "
-            << MEM[i].w
-            << " "
-            << MEM[i].h
-            << " "
             << MEM[i].x
             << " "
             << MEM[i].y
+            << " "
+            << MEM[i].w
+            << " "
+            << MEM[i].h
             << std::endl;
 }
