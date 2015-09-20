@@ -41,7 +41,7 @@ static std::string attr[15][2] = {
     {"program",    "aria"}
 };
 
-const std::string file = "/home/gabeg/scripts/programs/aria/config/aria.config";
+const std::string file = "/home/gabeg/scripts/programs/aria/aria.conf";
 
 /* **********************************************
  * ***** INITIALIZE THE NOTIFICATION BUBBLE *****
