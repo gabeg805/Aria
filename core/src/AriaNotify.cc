@@ -17,15 +17,17 @@
 #include "AriaNotify.h"
 #include "AriaAttribute.h"
 #include "AriaMap.h"
-#include <X11/Xlib.h>
+#include "AriaUtility.h"
 #include <gtkmm.h>
 #include <gdkmm.h>
 #include <pangomm/fontdescription.h>
-#include <string.h>
+#include <X11/Xlib.h>
 #include <cstdlib>
+#include <csignal>
 #include <iostream>
 #include <string>
-#include <unistd.h>
+
+static void cleanup(int sig);
 
 /* ***************************************
  * ***** DISPLAY NOTIFICATION BUBBLE *****
@@ -38,178 +40,81 @@ AriaNotify::AriaNotify() :
 {
 }
 
-/* *******************************
- * ***** PRINT PROGRAM USAGE *****
- * *******************************
- */
-
-void AriaNotify::usage(void)
-{
-    std::cout << "Usage: " << AriaAttribute::get("program") << " [option] <argument>\n"
-              << "\n"
-              << "Options:\n"
-              << "    -h, --help                   Print program usage message\n"
-              << "    -t, --title <text>           Title text\n"
-              << "    -b, --body <text>            Body text\n"
-              << "    -w, --width <size>           Width size\n"
-              << "    -h, --height <size>          Height size\n"
-              << "    -x, --xpos <position>        Location in the x-direction to move\n"
-              << "    -y, --ypos <position>        Location in the y-direction to move\n"
-              << "    --time <seconds>             Amount of time (in seconds) to display\n"
-              << "    -o, --opacity <value>        Opacity (0 <= value <= 1)\n"
-              << "    -m, --margin <value>         Box margins(0 < value)\n"
-              << "    -f, --font <font>            Text font\n"
-              << "    -ts, --title-size <size>     Size of text for the title\n"
-              << "    -bs, --body-size <size>      Size of text for the body\n"
-              << "    -bg, --background <color>    Color of the notification bubble\n"
-              << "    -fg, --foreground <color>    Color of the text\n"
-              << "\n"
-              << "Arguments:\n"
-              << "    <text>                       Text to display\n"
-              << "    <size>                       Size of the notification bubble\n"
-              << "    <position>                   X-Y position of the notitification bubble\n"
-              << "    <value>                      An integer or double value\n"
-              << "    <font>                       Text font\n"
-              << "    <size>                       Text size\n"
-              << "    <color>                      Hexadecimal color"
-              << std::endl;
-}
-
-/* **********************************************
- * ***** INITIALIZE THE NOTIFICATION BUBBLE *****
- * **********************************************
- */
-
-void AriaNotify::init(int argc, char** argv)
-{
-    AriaAttribute::set("program", *argv);
-    std::string str;
-
-    while ( *++argv != NULL ) {
-        str = *argv++;
-
-        if ( (str.compare("-h") == 0) || (str.compare("--help") == 0) ) {
-            usage();
-            exit(0);
-        }
-        else if ( (str.compare("-t") == 0) || (str.compare("--title") == 0) )
-            AriaAttribute::set("title", *argv);
-        else if ( (str.compare("-b") == 0) || (str.compare("--body") == 0) ) 
-            AriaAttribute::set("body", *argv);
-        else if ( (str.compare("-f") == 0) || (str.compare("--font") == 0) ) 
-            AriaAttribute::set("font", *argv);
-        else if ( (str.compare("-w") == 0) || (str.compare("--width") == 0) ) 
-            AriaAttribute::set("width", *argv);
-        else if ( (str.compare("-h") == 0) || (str.compare("--height") == 0) ) 
-            AriaAttribute::set("height", *argv);
-        else if ( (str.compare("-x") == 0) || (str.compare("--xpos") == 0) ) 
-            AriaAttribute::set("xpos", *argv);
-        else if ( (str.compare("-y") == 0) || (str.compare("--ypos") == 0) ) 
-            AriaAttribute::set("ypos", *argv);
-        else if ( str.compare("--time") == 0 )
-            AriaAttribute::set("timer", *argv);
-        else if ( (str.compare("-o") == 0) || (str.compare("--opacity") == 0) ) 
-            AriaAttribute::set("opacity", *argv);
-        else if ( (str.compare("-m") == 0) || (str.compare("--margin") == 0) ) 
-            AriaAttribute::set("margin", *argv);
-        else if ( (str.compare("-ts") == 0) || (str.compare("--title-size") == 0) ) 
-            AriaAttribute::set("title_size", *argv);
-        else if ( (str.compare("-bs") == 0) || (str.compare("--body-size") == 0) ) 
-            AriaAttribute::set("body_size", *argv);
-        else if ( (str.compare("-bg") == 0) || (str.compare("--background") == 0) ) 
-            AriaAttribute::set("background", *argv);
-        else if ( (str.compare("-fg") == 0) || (str.compare("--foreground") == 0) ) 
-            AriaAttribute::set("foreground", *argv);
-        else
-            continue;
-    }
-
-    AriaAttribute::set_defaults();
-}
-
 /* ******************************************
  * ***** CREATE THE NOTIFICATION BUBBLE *****
  * ******************************************
  */
 
-void AriaNotify::create(void)
+/* Initialize notification */
+void AriaNotify::init(char **argv)
 {
-    check_notify_text();
-    set_title();
-    set_size();
-    set_background();
-    set_foreground();
-    set_margin();
-    set_notify_title_text();
-    set_notify_body_text();
-    set_timer();
-    this->add(bubble);
-    this->show_all_children();
-    set_position();
-}
+    int status = AriaAttribute::init(argv);
+    if ( status != 0 ) {
+        AriaUtility::usage();
+        exit(0);
+    }
 
-/* *****************************
- * ***** CHECK TEXT STATUS *****
- * *****************************
- */
-
-void AriaNotify::check_notify_text(void)
-{
     std::string title = AriaAttribute::get("title");
     std::string body  = AriaAttribute::get("body");
-    std::string prog  = AriaAttribute::get("program");
+    if ( title.empty() && body.empty() )
+        AriaUtility::error("No title or body text set");
 
-    if ( title.empty() && body.empty() ) {
-        std::cout << prog << ": No title or body text set." << std::endl;
-        exit(1);
-    }
+    std::signal(SIGHUP,  cleanup);
+    std::signal(SIGINT,  cleanup);
+    std::signal(SIGQUIT, cleanup);
+    std::signal(SIGKILL, cleanup);
+    std::signal(SIGSEGV, cleanup);
+    std::signal(SIGTERM, cleanup);
 }
 
-/* **********************************
- * ***** SET NOTIFICATION TIMER *****
- * **********************************
- */
-
-void AriaNotify::set_timer(void)
+/* Display notification */
+void AriaNotify::show(void)
 {
-    int timer = atoi(AriaAttribute::get("timer").c_str());
-    if ( timer <= 0 )
-        return;
-
-    Glib::signal_timeout().connect_seconds(sigc::mem_fun(*this, 
-                                                         &AriaNotify::timeout), 
-                                           timer);
+    this->add(bubble);
+    this->show_all_children();
+    set_size();
 }
 
+/* Move notification to position and save coordinates */
+void AriaNotify::position(void)
+{
+    struct MapData data = {.id = getpid(),
+                           .x  = get_xpos(),
+                           .y  = get_ypos(),
+                           .w  = get_width(),
+                           .h  = get_height()};
+    AriaMap::store(&data, 10);
+
+    data.x = (get_screen_size() - data.w) - data.x;
+    this->move(data.x, data.y);
+}
+
+/* Exit action when notification times out */
 bool AriaNotify::timeout()
 {
-    std::cout << "Timeout hiding" << std::endl;
     AriaMap::cleanup();
     hide();
     return true;
 }
 
-/* *********************************
- * ***** SET NOTIFICATION TEXT *****
- * *********************************
+/* ***************************************
+ * ***** SET NOTIFICATION ATTRIBUTES *****
+ * ***************************************
  */
 
+/* Set title text */
 void AriaNotify::set_title(void)
-{
-    std::string prog = AriaAttribute::get("program");
-    // this->set_title(prog);
-}
-
-void AriaNotify::set_notify_title_text(void)
 {
     set_notify_text("title");
 }
 
-void AriaNotify::set_notify_body_text(void)
+/* Set body text */
+void AriaNotify::set_body(void)
 {
     set_notify_text("body");
 }
 
+/* General text setter */
 void AriaNotify::set_notify_text(std::string key)
 {
     if ( !AriaAttribute::get(key).empty() ) {
@@ -231,78 +136,7 @@ void AriaNotify::set_notify_text(std::string key)
     }
 }
 
-/* *******************************************
- * ***** SET/GET NOTIFICATION DIMENSIONS *****
- * *******************************************
- */
-
-/* Spatial positioning */
-int get_xpos(void)
-{
-    static int xpos = atoi(AriaAttribute::get("xpos").c_str());
-    return xpos;
-}
-
-int get_ypos(void)
-{
-    static int ypos = atoi(AriaAttribute::get("ypos").c_str());
-    return ypos;
-}
-
-/* Dimensions */
-int get_width(void)
-{
-    static int width = atoi(AriaAttribute::get("width").c_str());
-    return width;
-}
-
-int get_height(void)
-{
-    static int height = atoi(AriaAttribute::get("height").c_str());
-    return height;
-}
-
-/* Dimensional and spatial setters */
-void AriaNotify::set_position(void)
-{
-    Display *dpy    = XOpenDisplay(NULL);
-    int      screen = DisplayWidth(dpy, DefaultScreen(dpy));
-    int      w      = 0;
-    int      h      = 0;
-    this->get_size((int&)w, (int&)h);
-    /* Catch signals and redirect to timeout() */
-    int      x          = get_xpos();
-    long     y          = get_ypos();
-    pid_t    pid        = getpid();
-    struct MapData data = {.id=pid, .x=x, .y=y, .w=w, .h=h};
-    AriaMap::store(&data, 10);
-
-    data.x = (screen - w) - data.x;
-    this->move(data.x, data.y);
-}
-
-void AriaNotify::set_size(void)
-{
-    int width  = get_width();
-    int height = get_height();
-    if ( width && height )
-        this->set_default_size(width, height);
-}
-
-void AriaNotify::set_margin(void)
-{
-    int margin = atoi(AriaAttribute::get("margin").c_str());
-    bubble.set_margin_top(margin);
-    bubble.set_margin_bottom(margin);
-    bubble.set_margin_start(margin);
-    bubble.set_margin_end(margin);
-}
-
-/* **********************************
- * ***** SET NOTIFICATION COLOR *****
- * **********************************
- */
-
+/* Set background color */
 void AriaNotify::set_background(void)
 {
     std::string color = AriaAttribute::get("background");
@@ -313,7 +147,7 @@ void AriaNotify::set_background(void)
     this->override_background_color(background, Gtk::STATE_FLAG_NORMAL);
 }
 
-
+/* Set foreground color */
 void AriaNotify::set_foreground(void)
 {
     std::string color = AriaAttribute::get("foreground");
@@ -322,4 +156,88 @@ void AriaNotify::set_foreground(void)
 
     Gdk::RGBA foreground(color);
     this->override_color(foreground, Gtk::STATE_FLAG_NORMAL);
+}
+
+/* Set text margins */
+void AriaNotify::set_margin(void)
+{
+    int margin = atoi(AriaAttribute::get("margin").c_str());
+    bubble.set_margin_top(margin);
+    bubble.set_margin_bottom(margin);
+    bubble.set_margin_start(margin);
+    bubble.set_margin_end(margin);
+}
+
+/* Set bubble size */
+void AriaNotify::set_size(void)
+{
+    int width  = get_width();
+    int height = get_height();
+    if ( width && height )
+        this->set_default_size(width, height);
+}
+
+/* Set display timer */
+void AriaNotify::set_timer(void)
+{
+    int timer = atoi(AriaAttribute::get("timer").c_str());
+    if ( timer <= 0 )
+        return;
+
+    Glib::signal_timeout().connect_seconds(
+        sigc::mem_fun(*this, &AriaNotify::timeout), timer);
+}
+
+/* ***************************************
+ * ***** GET NOTIFICATION DIMENSIONS *****
+ * ***************************************
+ */
+
+void cleanup(int sig)
+{
+    AriaMap::cleanup();
+    exit(sig);
+}
+
+/* Spatial positioning */
+int AriaNotify::get_xpos(void)
+{
+    static int xpos = atoi(AriaAttribute::get("xpos").c_str());
+    return xpos;
+}
+
+int AriaNotify::get_ypos(void)
+{
+    static int ypos = atoi(AriaAttribute::get("ypos").c_str());
+    return ypos;
+}
+
+/* Dimensions */
+int AriaNotify::get_width(void)
+{
+    static int width  = atoi(AriaAttribute::get("width").c_str());
+    static int height = 0;
+    if ( width > 0 )
+        return width;
+    else
+        this->get_size(width, height);
+    return width;
+}
+
+int AriaNotify::get_height(void)
+{
+    static int width  = 0;
+    static int height = atoi(AriaAttribute::get("height").c_str());
+    if ( height > 0 )
+        return height;
+    else
+        this->get_size(width, height);
+    return height;
+}
+
+int AriaNotify::get_screen_size(void)
+{
+    static Display *dpy    = XOpenDisplay(NULL);
+    static int      screen = DisplayWidth(dpy, DefaultScreen(dpy));
+    return screen;
 }

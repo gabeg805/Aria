@@ -43,33 +43,55 @@ static std::string attr[15][2] = {
 
 const std::string file = "/home/gabeg/scripts/programs/aria/config/aria.config";
 
-/* ***************************************
- * ***** GET NOTIFICATION ATTRIBUTES *****
- * ***************************************
+/* **********************************************
+ * ***** INITIALIZE THE NOTIFICATION BUBBLE *****
+ * **********************************************
  */
 
-std::string AriaAttribute::get(std::string key)
+int AriaAttribute::init(char **argv)
 {
-    size_t len = sizeof(attr) / sizeof(attr[0]);
-    size_t i;
+    set("program", *argv);
+    std::string str;
 
-    for ( i = 0; i < len; ++i )
-        if ( attr[i][0].compare(key) == 0 )
-            return attr[i][1];
+    while ( *++argv != NULL ) {
+        str = *argv++;
 
-    return "";
-}
+        if ( (str.compare("-h") == 0) || (str.compare("--help") == 0) )
+            return -1;
+        else if ( (str.compare("-t") == 0) || (str.compare("--title") == 0) )
+            set("title", *argv);
+        else if ( (str.compare("-b") == 0) || (str.compare("--body") == 0) )
+            set("body", *argv);
+        else if ( (str.compare("-f") == 0) || (str.compare("--font") == 0) )
+            set("font", *argv);
+        else if ( (str.compare("-w") == 0) || (str.compare("--width") == 0) )
+            set("width", *argv);
+        else if ( (str.compare("-h") == 0) || (str.compare("--height") == 0) )
+            set("height", *argv);
+        else if ( (str.compare("-x") == 0) || (str.compare("--xpos") == 0) )
+            set("xpos", *argv);
+        else if ( (str.compare("-y") == 0) || (str.compare("--ypos") == 0) )
+            set("ypos", *argv);
+        else if ( str.compare("--time") == 0 )
+            set("timer", *argv);
+        else if ( (str.compare("-o") == 0) || (str.compare("--opacity") == 0) ) 
+            set("opacity", *argv);
+        else if ( (str.compare("-m") == 0) || (str.compare("--margin") == 0) ) 
+            set("margin", *argv);
+        else if ( (str.compare("-ts") == 0) || (str.compare("--title-size") == 0) ) 
+            set("title_size", *argv);
+        else if ( (str.compare("-bs") == 0) || (str.compare("--body-size") == 0) ) 
+            set("body_size", *argv);
+        else if ( (str.compare("-bg") == 0) || (str.compare("--background") == 0) ) 
+            set("background", *argv);
+        else if ( (str.compare("-fg") == 0) || (str.compare("--foreground") == 0) ) 
+            set("foreground", *argv);
+        else
+            continue;
+    }
 
-std::string AriaAttribute::get(size_t key)
-{
-    size_t len = sizeof(attr) / sizeof(attr[0]);
-    size_t i;
-
-    for ( i = 0; i < len; ++i )
-        if ( i == key )
-            return attr[i][1];
-
-    return "";
+    set_defaults();
+    return 0;
 }
 
 /* ***************************************
@@ -77,33 +99,28 @@ std::string AriaAttribute::get(size_t key)
  * ***************************************
  */
 
-
 int AriaAttribute::set(std::string key, std::string val)
 {
     size_t len = sizeof(attr) / sizeof(attr[0]);
     size_t i;
-
     for ( i = 0; i < len; ++i )
         if ( attr[i][0].compare(key) == 0 ) {
             attr[i][1] = val;
             return 0;
         }
-
-    return 1;
+    return -1;
 }
 
 int AriaAttribute::set(size_t key, std::string val)
 {
     size_t len = sizeof(attr) / sizeof(attr[0]);
     size_t i;
-
     for ( i = 0; i < len; ++i )
         if ( i == key ) {
             attr[i][1] = val;
             return 0;
         }
-
-    return 1;
+    return -1;
 }
 
 int AriaAttribute::set_defaults(void)
@@ -141,6 +158,31 @@ int AriaAttribute::set_defaults(void)
     return 0;
 }
 
+/* ***************************************
+ * ***** GET NOTIFICATION ATTRIBUTES *****
+ * ***************************************
+ */
+
+std::string AriaAttribute::get(std::string key)
+{
+    size_t len = sizeof(attr) / sizeof(attr[0]);
+    size_t i;
+    for ( i = 0; i < len; ++i )
+        if ( attr[i][0].compare(key) == 0 )
+            return attr[i][1];
+    return "";
+}
+
+std::string AriaAttribute::get(size_t key)
+{
+    size_t len = sizeof(attr) / sizeof(attr[0]);
+    size_t i;
+    for ( i = 0; i < len; ++i )
+        if ( i == key )
+            return attr[i][1];
+    return "";
+}
+
 /* *******************************
  * ***** PRINT ATTRIBUTE MAP *****
  * *******************************
@@ -151,9 +193,8 @@ void AriaAttribute::print(void)
     size_t len = sizeof(attr) / sizeof(attr[0]);
     size_t i;
 
-    for ( i = 0; i < len; ++i ) {
+    for ( i = 0; i < len; ++i )
         std::cout << "i: " << i 
                   << " | attr0: " << attr[i][0]
                   << " | attr1: " << attr[i][1] << std::endl;
-    }
 }

@@ -14,8 +14,8 @@
  */
 
 // Header guard
-#ifndef ARIA_ATTRIBUTE_H
-#define ARIA_ATTRIBUTE_H
+#ifndef ARIA_COMMON_ARIAATTRIBUTE_H
+#define ARIA_COMMON_ARIAATTRIBUTE_H
 
 /* Includes */
 #include <string>
@@ -23,12 +23,13 @@
 /* Classes */
 namespace AriaAttribute
 {
-    std::string get(std::string key);
-    std::string get(size_t      key);
+    int         init(char **argv);
     int         set(std::string key, std::string val);
     int         set(size_t      key, std::string val);
     int         set_defaults(void);
+    std::string get(std::string key);
+    std::string get(size_t      key);
     void        print(void);
 };
 
-#endif /* ARIA_ATTRIBUTE_H */
+#endif /* ARIA_COMMON_ARIAATTRIBUTE_H */

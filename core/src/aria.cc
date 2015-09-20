@@ -19,13 +19,6 @@
 /* Includes */
 #include "AriaNotify.h"
 #include <gtkmm.h>
-#include <sys/mman.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <iostream>
-#include <errno.h>
-#include <string.h>
 
 /* **********************************
  * ***** DISPLAY ARIA STATUSBAR *****
@@ -37,8 +30,15 @@ int main(int argc, char** argv)
     Glib::RefPtr<Gtk::Application> app = Gtk::Application::create("");
 
     AriaNotify Aria;
-    Aria.init(argc, argv);
-    Aria.create();
+    Aria.init(argv);
+    Aria.set_title();
+    Aria.set_body();
+    Aria.set_background();
+    Aria.set_foreground();
+    Aria.set_margin();
+    Aria.set_timer();
+    Aria.show();
+    Aria.position();
 
     return app->run(Aria);
 }

@@ -31,7 +31,7 @@
 #include <sys/file.h>
 
 /* Declares */
-static const  char   *MFILE   = "ploobmap";
+static const  char   *MFILE   = "/tmp/ariamap";
 static const  int     MPROT   = PROT_READ | PROT_WRITE;
 static const  int     MFLAGS  = MAP_SHARED;
 static const  size_t  MLEN    = 2*10;
@@ -92,43 +92,31 @@ int AriaMap::store(struct MapData *data, long shift)
 /* Shift y coordinate of notification bubble location */
 int AriaMap::displace(struct MapData *data, long shift)
 {
-    long   x      = data->x;
+    // long   x      = data->x;
     long   y      = data->y;
-    long   w      = data->w;
+    // long   w      = data->w;
     long   h      = data->h;
-    long   xcur   = 0;
+    // long   xcur   = 0;
     long   ycur   = 0;
-    long   xnew   = x;
+    // long   xnew   = x;
     long   ynew   = y;
-    long   xavail = x;
+    // long   xavail = x;
     long   yavail = y;
     size_t i;
     for ( i = 0; i < MLEN; ++i ) {
         if ( MEM[i].id == 0 )
             break;
 
-        xcur = MEM[i].x + MEM[i].w + shift;
+        // xcur = MEM[i].x + MEM[i].w + shift;
         ycur = MEM[i].y + MEM[i].h + shift;
-        xnew = xavail   + w        + shift;
+        // xnew = xavail   + w        + shift;
         ynew = yavail   + h        + shift;
 
-        if ( (ynew > MEM[i].y) && (ycur > yavail) ) {
+        if ( (ynew > MEM[i].y) && (ycur > yavail) )
             yavail = ycur;
-            // if ( (xnew > MEM[i].x) && (xcur > xavail) ) 
-            //     xavail = xcur;
-        }
-
-        // std::cout
-        //     << "i: " << i << " | "
-        //     << "memy: " << MEM[i].y << " | "
-        //     << "memh: " << MEM[i].h << " | "
-        //     << "yavail: " << yavail
-        //     << std::endl;
     }
 
-    /* This shifts the x over like crazy, still 
-     * needs to make sure that there is no overlap
-     * The algorithm doesn't work as expected */
+    /* Algorithm still needs to make sure that there is no overlap */
     // data->x = (xavail == x) ? (x + shift) : xavail;
     data->y = (yavail == y) ? (y + shift) : yavail;
 

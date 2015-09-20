@@ -7,9 +7,10 @@ CINC    =
 
 ## Program source files
 PROGRAM = aria
-COMMON  = AriaAttribute
+COMMON  = AriaAttribute AriaUtility
 CORE    = $(PROGRAM) AriaNotify AriaMap
 NAMES   = $(COMMON) $(CORE)  
+MEMMAP  = /tmp/ariamap
 
 ## Directories used
 COMMON_DIR = ./common
@@ -57,3 +58,4 @@ clean :
 	@rm -v -f $(OBJ)
 	@rm -v -f $(OBJ_DIR)/*
 	@rm -v -f $(PROGRAM)
+	@rm -v -f $(MEMMAP)
