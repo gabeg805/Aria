@@ -15,6 +15,7 @@
 
 /* Includes */
 #include "AriaAttribute.h"
+#include <X11/Xlib.h>
 #include <iostream>
 #include <algorithm>
 #include <cctype>
@@ -22,8 +23,12 @@
 #include <sstream>
 #include <string>
 
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
+
 /* Declares */
-static std::string attr[15][2] = {
+const std::string CONF_FILE = "/home/gabeg/scripts/programs/aria/aria.conf";
+static std::string ATTR[16][2] = {
+    {"screen",     ""},
     {"title",      ""},
     {"body",       ""},
     {"font",       "DejaVu"},
@@ -41,16 +46,21 @@ static std::string attr[15][2] = {
     {"program",    "aria"}
 };
 
-const std::string file = "/home/gabeg/scripts/programs/aria/aria.conf";
-
-/* **********************************************
- * ***** INITIALIZE THE NOTIFICATION BUBBLE *****
- * **********************************************
+/* ************************************************************************** */
+/**
+ * @brief Initialize the Aria attribute data structure by populating some user
+ *        defined pieces.
+ * 
+ * @details Essentially a specialized getopt. Loop through the argument vector
+ *          searching for user defined pieces and populate the data structure
+ *          when a new piece is found. When all user defined pieces are
+ *          specified, fill in the remainder with defaults.
+ * 
+ * @params argv the command line argument vector.
  */
-
 int AriaAttribute::init(char **argv)
 {
-    set("program", *argv);
+    AriaAttribute::setstr("program", *argv);
     std::string str;
 
     while ( *++argv != NULL ) {
@@ -59,73 +69,93 @@ int AriaAttribute::init(char **argv)
         if ( (str.compare("-h") == 0) || (str.compare("--help") == 0) )
             return -1;
         else if ( (str.compare("-t") == 0) || (str.compare("--title") == 0) )
-            set("title", *argv);
+            AriaAttribute::setstr("title", *argv);
         else if ( (str.compare("-b") == 0) || (str.compare("--body") == 0) )
-            set("body", *argv);
+            AriaAttribute::setstr("body", *argv);
         else if ( (str.compare("-f") == 0) || (str.compare("--font") == 0) )
-            set("font", *argv);
+            AriaAttribute::setstr("font", *argv);
         else if ( (str.compare("-w") == 0) || (str.compare("--width") == 0) )
-            set("width", *argv);
+            AriaAttribute::setstr("width", *argv);
         else if ( (str.compare("-h") == 0) || (str.compare("--height") == 0) )
-            set("height", *argv);
+            AriaAttribute::setstr("height", *argv);
         else if ( (str.compare("-x") == 0) || (str.compare("--xpos") == 0) )
-            set("xpos", *argv);
+            AriaAttribute::setstr("xpos", *argv);
         else if ( (str.compare("-y") == 0) || (str.compare("--ypos") == 0) )
-            set("ypos", *argv);
+            AriaAttribute::setstr("ypos", *argv);
         else if ( str.compare("--time") == 0 )
-            set("timer", *argv);
+            AriaAttribute::setstr("timer", *argv);
         else if ( (str.compare("-o") == 0) || (str.compare("--opacity") == 0) ) 
-            set("opacity", *argv);
+            AriaAttribute::setstr("opacity", *argv);
         else if ( (str.compare("-m") == 0) || (str.compare("--margin") == 0) ) 
-            set("margin", *argv);
+            AriaAttribute::setstr("margin", *argv);
         else if ( (str.compare("-ts") == 0) || (str.compare("--title-size") == 0) ) 
-            set("title_size", *argv);
+            AriaAttribute::setstr("title_size", *argv);
         else if ( (str.compare("-bs") == 0) || (str.compare("--body-size") == 0) ) 
-            set("body_size", *argv);
+            AriaAttribute::setstr("body_size", *argv);
         else if ( (str.compare("-bg") == 0) || (str.compare("--background") == 0) ) 
-            set("background", *argv);
+            AriaAttribute::setstr("background", *argv);
         else if ( (str.compare("-fg") == 0) || (str.compare("--foreground") == 0) ) 
-            set("foreground", *argv);
+            AriaAttribute::setstr("foreground", *argv);
         else
             continue;
     }
 
-    set_defaults();
+    AriaAttribute::setdef();
     return 0;
 }
 
-/* ***************************************
- * ***** SET NOTIFICATION ATTRIBUTES *****
- * ***************************************
+/* ************************************************************************** */
+/**
+ * @brief Set values in the attribute data structure using a key-value pairing
+ *        system.
+ * 
+ * @params key the unique identifier in the attribute data structure which
+ *             points to a value.
+ * @params val the value which the key points to.
  */
-
-int AriaAttribute::set(std::string key, std::string val)
+int AriaAttribute::setstr(std::string key, std::string val)
 {
-    size_t len = sizeof(attr) / sizeof(attr[0]);
+    size_t len = sizeof(ATTR) / sizeof(ATTR[0]);
     size_t i;
     for ( i = 0; i < len; ++i )
-        if ( attr[i][0].compare(key) == 0 ) {
-            attr[i][1] = val;
+        if ( ATTR[i][0].compare(key) == 0 ) {
+            ATTR[i][1] = val;
             return 0;
         }
     return -1;
 }
 
-int AriaAttribute::set(size_t key, std::string val)
+/* ************************************************************************** */
+/**
+ * @brief Set values in the attribute data structure using a key-value pairing
+ *        system.
+ * 
+ * @params key the unique identifier in the attribute data structure which
+ *             points to a value.
+ * @params val the value which the key points to.
+ */
+int AriaAttribute::setint(std::string key, int val)
 {
-    size_t len = sizeof(attr) / sizeof(attr[0]);
-    size_t i;
+    size_t            len = sizeof(ATTR) / sizeof(ATTR[0]);
+    size_t            i;
+    std::stringstream ss;
     for ( i = 0; i < len; ++i )
-        if ( i == key ) {
-            attr[i][1] = val;
+        if ( ATTR[i][0].compare(key) == 0 ) {
+            ss << val;
+            ATTR[i][1] = ss.str();
             return 0;
         }
     return -1;
 }
 
-int AriaAttribute::set_defaults(void)
+/* ************************************************************************** */
+/**
+ * @brief Set default values in the attribute data structure by reading and
+ *        parsing the configuration file.
+ */
+int AriaAttribute::setdef(void)
 {
-    std::ifstream is(file.c_str(), std::ifstream::in);
+    std::ifstream is(CONF_FILE.c_str(), std::ifstream::in);
     std::string   delimiter = ":";
     std::string   line;
     std::string   setting;
@@ -142,7 +172,7 @@ int AriaAttribute::set_defaults(void)
         loc     = line.find(delimiter);
         setting = line.substr(0, loc);
         setting.erase(std::remove(setting.begin(), setting.end(), ' '), setting.end());
-        if ( !get(setting).empty() )
+        if ( !AriaAttribute::getstr(setting).empty() )
             continue;
 
         /* Return value pair */
@@ -152,49 +182,60 @@ int AriaAttribute::set_defaults(void)
         if ( pos < 0 )
             continue;
         else
-            set(setting, remainder.substr(pos, len));
+            AriaAttribute::setstr(setting, remainder.substr(pos, len));
     }
+
+    Display          *dpy    = XOpenDisplay(NULL);
+    int               screen = DisplayWidth(dpy, DefaultScreen(dpy));
+    std::stringstream ss;
+    ss << screen;
+    AriaAttribute::setstr("screen", ss.str());
 
     return 0;
 }
 
-/* ***************************************
- * ***** GET NOTIFICATION ATTRIBUTES *****
- * ***************************************
+/* ************************************************************************** */
+/**
+ * @brief Return the value in the attribute data structure that is pointed to by
+ *        the given key.
+ * 
+ * @params key the unique identifier in the attribute data structure which
+ *             points to a value.
  */
-
-std::string AriaAttribute::get(std::string key)
+std::string AriaAttribute::getstr(std::string key)
 {
-    size_t len = sizeof(attr) / sizeof(attr[0]);
+    size_t len = sizeof(ATTR) / sizeof(ATTR[0]);
     size_t i;
     for ( i = 0; i < len; ++i )
-        if ( attr[i][0].compare(key) == 0 )
-            return attr[i][1];
+        if ( ATTR[i][0].compare(key) == 0 )
+            return ATTR[i][1];
     return "";
 }
 
-std::string AriaAttribute::get(size_t key)
+/* ************************************************************************** */
+/**
+ * @brief Return the value in the attribute data structure that is pointed to by
+ *        the given key.
+ * 
+ * @params key the unique identifier in the attribute data structure which
+ *             points to a value.
+ */
+int AriaAttribute::getint(std::string key)
 {
-    size_t len = sizeof(attr) / sizeof(attr[0]);
-    size_t i;
-    for ( i = 0; i < len; ++i )
-        if ( i == key )
-            return attr[i][1];
-    return "";
+    return atoi(AriaAttribute::getstr(key).c_str());
 }
 
-/* *******************************
- * ***** PRINT ATTRIBUTE MAP *****
- * *******************************
+/* ************************************************************************** */
+/**
+ * @brief Print every key-value pair in the attribute data structure.
  */
-
 void AriaAttribute::print(void)
 {
-    size_t len = sizeof(attr) / sizeof(attr[0]);
+    size_t len = sizeof(ATTR) / sizeof(ATTR[0]);
     size_t i;
 
     for ( i = 0; i < len; ++i )
         std::cout << "i: " << i 
-                  << " | attr0: " << attr[i][0]
-                  << " | attr1: " << attr[i][1] << std::endl;
+                  << " | attr0: " << ATTR[i][0]
+                  << " | attr1: " << ATTR[i][1] << std::endl;
 }

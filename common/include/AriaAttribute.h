@@ -20,15 +20,22 @@
 /* Includes */
 #include <string>
 
-/* Classes */
+/**
+ * @brief Aria notification attribute handler.
+ * 
+ * @details Stores the data structure that contains all attributes for the Aria
+ *          notification bubble. Is capable of searching, accessing, and 
+ *          modifying elements in the attribute data structure and returning the
+ *          appropriate value back to the user.
+*/
 namespace AriaAttribute
 {
     int         init(char **argv);
-    int         set(std::string key, std::string val);
-    int         set(size_t      key, std::string val);
-    int         set_defaults(void);
-    std::string get(std::string key);
-    std::string get(size_t      key);
+    int         setstr(std::string key, std::string val);
+    int         setint(std::string key, int val);
+    int         setdef(void);
+    std::string getstr(std::string key);
+    int         getint(std::string key);
     void        print(void);
 };
 

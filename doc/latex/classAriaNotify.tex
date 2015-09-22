@@ -1,0 +1,232 @@
+\hypertarget{classAriaNotify}{}\section{Aria\+Notify Class Reference}
+\label{classAriaNotify}\index{Aria\+Notify@{Aria\+Notify}}
+
+
+Aria notification bubble object.  
+
+
+
+
+{\ttfamily \#include $<$Aria\+Notify.\+h$>$}
+
+Inheritance diagram for Aria\+Notify\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classAriaNotify}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classAriaNotify_a12a3c30e76a779224eda9b85ab64da41}{Aria\+Notify} ()
+\item 
+void \hyperlink{classAriaNotify_a44b553e65a193d1d6def4158bbdbb2ae}{init} (char $\ast$$\ast$argv)
+\begin{DoxyCompactList}\small\item\em Initialize the notification bubble. \end{DoxyCompactList}\item 
+void \hyperlink{classAriaNotify_a36bb378b4e4f3cfaa3415674c40e5ddb}{show} (void)
+\begin{DoxyCompactList}\small\item\em Display the notification bubble. \end{DoxyCompactList}\item 
+void \hyperlink{classAriaNotify_a67f8b8c529ac7066b533e7de1dead607}{position} (void)
+\begin{DoxyCompactList}\small\item\em Move the notification bubble. \end{DoxyCompactList}\item 
+void \hyperlink{classAriaNotify_ab6c049c98062b55fb9dbf93ad86506be}{set\+\_\+title} (void)
+\begin{DoxyCompactList}\small\item\em Set the notification bubble title text. \end{DoxyCompactList}\item 
+void \hyperlink{classAriaNotify_aad084fc44a4896dbd096fc94da77d911}{set\+\_\+body} (void)
+\begin{DoxyCompactList}\small\item\em Set the notification bubble body text. \end{DoxyCompactList}\item 
+void \hyperlink{classAriaNotify_ad733a27ee37e049400d91814d6cec659}{set\+\_\+notify\+\_\+text} (std\+::string field)
+\begin{DoxyCompactList}\small\item\em General notification text setter. \end{DoxyCompactList}\item 
+void \hyperlink{classAriaNotify_a3070b81ec7549551985807608c4dc230}{set\+\_\+background} (void)
+\begin{DoxyCompactList}\small\item\em Set the background color of the notification bubble. \end{DoxyCompactList}\item 
+void \hyperlink{classAriaNotify_a8befc6cd8cc6c3bfd9fb498ca43149df}{set\+\_\+foreground} (void)
+\begin{DoxyCompactList}\small\item\em Set the foreground (text) color of the notification bubble. \end{DoxyCompactList}\item 
+void \hyperlink{classAriaNotify_abdc3c582bed37b641270135f701f8c94}{set\+\_\+margin} (void)
+\begin{DoxyCompactList}\small\item\em Set the margin of the notification bubble text. \end{DoxyCompactList}\item 
+void \hyperlink{classAriaNotify_ac3a070a586a3ac7470479c23bb8619c1}{set\+\_\+size} (void)
+\begin{DoxyCompactList}\small\item\em Set the notification bubble size. \end{DoxyCompactList}\item 
+void \hyperlink{classAriaNotify_a11a1357c1243a781dabcce8c545838e4}{set\+\_\+timer} (void)
+\begin{DoxyCompactList}\small\item\em Set the notification bubble timer. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static void \hyperlink{classAriaNotify_ae9a1c13596ad8a7b1f363755c43ee72a}{cleanup} (int sig)
+\begin{DoxyCompactList}\small\item\em Cleanup any memory mapped data. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+Gtk\+::\+Box \hyperlink{classAriaNotify_acf839bd737ad1f569e868a886f1760f5}{bubble}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Aria notification bubble object. 
+
+Handles the initialization, creation, and displaying of the notification bubble. 
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classAriaNotify_a12a3c30e76a779224eda9b85ab64da41}{}\index{Aria\+Notify@{Aria\+Notify}!Aria\+Notify@{Aria\+Notify}}
+\index{Aria\+Notify@{Aria\+Notify}!Aria\+Notify@{Aria\+Notify}}
+\subsubsection[{Aria\+Notify()}]{\setlength{\rightskip}{0pt plus 5cm}Aria\+Notify\+::\+Aria\+Notify (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{classAriaNotify_a12a3c30e76a779224eda9b85ab64da41}
+Construct the notification window and container. 
+
+\subsection{Member Function Documentation}
+\hypertarget{classAriaNotify_ae9a1c13596ad8a7b1f363755c43ee72a}{}\index{Aria\+Notify@{Aria\+Notify}!cleanup@{cleanup}}
+\index{cleanup@{cleanup}!Aria\+Notify@{Aria\+Notify}}
+\subsubsection[{cleanup(int sig)}]{\setlength{\rightskip}{0pt plus 5cm}void Aria\+Notify\+::cleanup (
+\begin{DoxyParamCaption}
+\item[{int}]{sig}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\label{classAriaNotify_ae9a1c13596ad8a7b1f363755c43ee72a}
+
+
+Cleanup any memory mapped data. 
+
+Shuts down the program after cleaning up stored data. Used as a static member function due to its status as a signal handler.
+
+sig the signal that was raised. Incidentally, also the exit status. \hypertarget{classAriaNotify_a44b553e65a193d1d6def4158bbdbb2ae}{}\index{Aria\+Notify@{Aria\+Notify}!init@{init}}
+\index{init@{init}!Aria\+Notify@{Aria\+Notify}}
+\subsubsection[{init(char $\ast$$\ast$argv)}]{\setlength{\rightskip}{0pt plus 5cm}void Aria\+Notify\+::init (
+\begin{DoxyParamCaption}
+\item[{char $\ast$$\ast$}]{argv}
+\end{DoxyParamCaption}
+)}\label{classAriaNotify_a44b553e65a193d1d6def4158bbdbb2ae}
+
+
+Initialize the notification bubble. 
+
+Check inputs and set up signal handlers for cleanup.
+
+
+\begin{DoxyParams}{Parameters}
+{\em argv} & the command line argument vector. \\
+\hline
+\end{DoxyParams}
+\hypertarget{classAriaNotify_a67f8b8c529ac7066b533e7de1dead607}{}\index{Aria\+Notify@{Aria\+Notify}!position@{position}}
+\index{position@{position}!Aria\+Notify@{Aria\+Notify}}
+\subsubsection[{position(void)}]{\setlength{\rightskip}{0pt plus 5cm}void Aria\+Notify\+::position (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}\label{classAriaNotify_a67f8b8c529ac7066b533e7de1dead607}
+
+
+Move the notification bubble. 
+
+Determine the appropriate location to move the notification bubble such that there will be no overlap with other notifications. Stores this position in a shared memory region as a means of interprocess communication with other Aria applications. \hypertarget{classAriaNotify_a3070b81ec7549551985807608c4dc230}{}\index{Aria\+Notify@{Aria\+Notify}!set\+\_\+background@{set\+\_\+background}}
+\index{set\+\_\+background@{set\+\_\+background}!Aria\+Notify@{Aria\+Notify}}
+\subsubsection[{set\+\_\+background(void)}]{\setlength{\rightskip}{0pt plus 5cm}void Aria\+Notify\+::set\+\_\+background (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}\label{classAriaNotify_a3070b81ec7549551985807608c4dc230}
+
+
+Set the background color of the notification bubble. 
+
+\hypertarget{classAriaNotify_aad084fc44a4896dbd096fc94da77d911}{}\index{Aria\+Notify@{Aria\+Notify}!set\+\_\+body@{set\+\_\+body}}
+\index{set\+\_\+body@{set\+\_\+body}!Aria\+Notify@{Aria\+Notify}}
+\subsubsection[{set\+\_\+body(void)}]{\setlength{\rightskip}{0pt plus 5cm}void Aria\+Notify\+::set\+\_\+body (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}\label{classAriaNotify_aad084fc44a4896dbd096fc94da77d911}
+
+
+Set the notification bubble body text. 
+
+\hypertarget{classAriaNotify_a8befc6cd8cc6c3bfd9fb498ca43149df}{}\index{Aria\+Notify@{Aria\+Notify}!set\+\_\+foreground@{set\+\_\+foreground}}
+\index{set\+\_\+foreground@{set\+\_\+foreground}!Aria\+Notify@{Aria\+Notify}}
+\subsubsection[{set\+\_\+foreground(void)}]{\setlength{\rightskip}{0pt plus 5cm}void Aria\+Notify\+::set\+\_\+foreground (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}\label{classAriaNotify_a8befc6cd8cc6c3bfd9fb498ca43149df}
+
+
+Set the foreground (text) color of the notification bubble. 
+
+\hypertarget{classAriaNotify_abdc3c582bed37b641270135f701f8c94}{}\index{Aria\+Notify@{Aria\+Notify}!set\+\_\+margin@{set\+\_\+margin}}
+\index{set\+\_\+margin@{set\+\_\+margin}!Aria\+Notify@{Aria\+Notify}}
+\subsubsection[{set\+\_\+margin(void)}]{\setlength{\rightskip}{0pt plus 5cm}void Aria\+Notify\+::set\+\_\+margin (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}\label{classAriaNotify_abdc3c582bed37b641270135f701f8c94}
+
+
+Set the margin of the notification bubble text. 
+
+\hypertarget{classAriaNotify_ad733a27ee37e049400d91814d6cec659}{}\index{Aria\+Notify@{Aria\+Notify}!set\+\_\+notify\+\_\+text@{set\+\_\+notify\+\_\+text}}
+\index{set\+\_\+notify\+\_\+text@{set\+\_\+notify\+\_\+text}!Aria\+Notify@{Aria\+Notify}}
+\subsubsection[{set\+\_\+notify\+\_\+text(std\+::string field)}]{\setlength{\rightskip}{0pt plus 5cm}void Aria\+Notify\+::set\+\_\+notify\+\_\+text (
+\begin{DoxyParamCaption}
+\item[{std\+::string}]{field}
+\end{DoxyParamCaption}
+)}\label{classAriaNotify_ad733a27ee37e049400d91814d6cec659}
+
+
+General notification text setter. 
+
+Set the font family, font size, and text for the given notification field.
+
+
+\begin{DoxyParams}{Parameters}
+{\em field} & the notification field to setup -\/ either title or body. \\
+\hline
+\end{DoxyParams}
+\hypertarget{classAriaNotify_ac3a070a586a3ac7470479c23bb8619c1}{}\index{Aria\+Notify@{Aria\+Notify}!set\+\_\+size@{set\+\_\+size}}
+\index{set\+\_\+size@{set\+\_\+size}!Aria\+Notify@{Aria\+Notify}}
+\subsubsection[{set\+\_\+size(void)}]{\setlength{\rightskip}{0pt plus 5cm}void Aria\+Notify\+::set\+\_\+size (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}\label{classAriaNotify_ac3a070a586a3ac7470479c23bb8619c1}
+
+
+Set the notification bubble size. 
+
+\hypertarget{classAriaNotify_a11a1357c1243a781dabcce8c545838e4}{}\index{Aria\+Notify@{Aria\+Notify}!set\+\_\+timer@{set\+\_\+timer}}
+\index{set\+\_\+timer@{set\+\_\+timer}!Aria\+Notify@{Aria\+Notify}}
+\subsubsection[{set\+\_\+timer(void)}]{\setlength{\rightskip}{0pt plus 5cm}void Aria\+Notify\+::set\+\_\+timer (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}\label{classAriaNotify_a11a1357c1243a781dabcce8c545838e4}
+
+
+Set the notification bubble timer. 
+
+Closes the notification bubble after the timeout. \hypertarget{classAriaNotify_ab6c049c98062b55fb9dbf93ad86506be}{}\index{Aria\+Notify@{Aria\+Notify}!set\+\_\+title@{set\+\_\+title}}
+\index{set\+\_\+title@{set\+\_\+title}!Aria\+Notify@{Aria\+Notify}}
+\subsubsection[{set\+\_\+title(void)}]{\setlength{\rightskip}{0pt plus 5cm}void Aria\+Notify\+::set\+\_\+title (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}\label{classAriaNotify_ab6c049c98062b55fb9dbf93ad86506be}
+
+
+Set the notification bubble title text. 
+
+\hypertarget{classAriaNotify_a36bb378b4e4f3cfaa3415674c40e5ddb}{}\index{Aria\+Notify@{Aria\+Notify}!show@{show}}
+\index{show@{show}!Aria\+Notify@{Aria\+Notify}}
+\subsubsection[{show(void)}]{\setlength{\rightskip}{0pt plus 5cm}void Aria\+Notify\+::show (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}\label{classAriaNotify_a36bb378b4e4f3cfaa3415674c40e5ddb}
+
+
+Display the notification bubble. 
+
+
+
+\subsection{Member Data Documentation}
+\hypertarget{classAriaNotify_acf839bd737ad1f569e868a886f1760f5}{}\index{Aria\+Notify@{Aria\+Notify}!bubble@{bubble}}
+\index{bubble@{bubble}!Aria\+Notify@{Aria\+Notify}}
+\subsubsection[{bubble}]{\setlength{\rightskip}{0pt plus 5cm}Gtk\+::\+Box Aria\+Notify\+::bubble}\label{classAriaNotify_acf839bd737ad1f569e868a886f1760f5}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+core/include/\hyperlink{AriaNotify_8h}{Aria\+Notify.\+h}\item 
+core/src/\hyperlink{AriaNotify_8cc}{Aria\+Notify.\+cc}\end{DoxyCompactItemize}

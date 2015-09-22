@@ -57,5 +57,5 @@ $(OBJ_DIR)/%.o: $(CORE_SRC_DIR)/%.cc
 clean : 
 	@rm -v -f $(OBJ)
 	@rm -v -f $(OBJ_DIR)/*
-	@rm -v -f $(PROGRAM)
 	@rm -v -f $(MEMMAP)
+	@rm -v -f $(PROGRAM)

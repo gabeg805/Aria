@@ -20,14 +20,13 @@
 #include <iostream>
 #include <string>
 
-/* *******************************
- * ***** PRINT PROGRAM USAGE *****
- * *******************************
+/* ************************************************************************** */
+/**
+ * @brief Print program usage.
  */
-
 void AriaUtility::usage(void)
 {
-    static std::string prog = AriaAttribute::get("program");
+    static std::string prog = AriaAttribute::getstr("program");
     std::cout << "Usage: " << prog << " [option] <argument>\n"
               << "\n"
               << "Options:\n"
@@ -58,14 +57,15 @@ void AriaUtility::usage(void)
               << std::endl;
 }
 
-/* *******************************
- * ***** PRINT PROGRAM ERROR *****
- * *******************************
+/* ************************************************************************** */
+/**
+ * @brief Print error message and exit.
+ * 
+ * @params str the desired error message to print out.
  */
-
 void AriaUtility::error(std::string str)
 {
-    static std::string prog = AriaAttribute::get("program");
+    static std::string prog = AriaAttribute::getstr("program");
     std::cout << prog << ": " << str << "." << std::endl;
     exit(1);
 }

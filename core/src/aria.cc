@@ -6,8 +6,8 @@
  * Email:   gabeg@bu.edu
  * License: The MIT License (MIT)
  * 
- * Syntax: $ g++ -g -Wall `pkg-config gtkmm-3.0 --cflags --libs` -o aria *.cc
- *         $ ./aria
+ * Syntax: $ TBD
+ *         $ TBD
  * 
  * Description: Creates the Aria Notification Bubble.
  * 
@@ -20,11 +20,7 @@
 #include "AriaNotify.h"
 #include <gtkmm.h>
 
-/* **********************************
- * ***** DISPLAY ARIA STATUSBAR *****
- * **********************************
- */
-
+/* Create and display the Aria statusbar */
 int main(int argc, char** argv)
 {
     Glib::RefPtr<Gtk::Application> app = Gtk::Application::create("");

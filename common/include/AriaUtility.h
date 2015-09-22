@@ -6,7 +6,7 @@
  * Email:   gabeg@bu.edu
  * License: The MIT License (MIT)
  * 
- * Description: Utility functions for various Aria scenarios.
+ * Description: The Aria utility tool.
  * 
  * Notes: None.
  * 
@@ -20,7 +20,11 @@
 /* Includes */
 #include <string>
 
-/* Classes */
+/**
+ * @brief The Aria utility tool.
+ * 
+ * @details Mainly used for printing usage and error state checking.
+*/
 namespace AriaUtility
 {
     void usage(void);
