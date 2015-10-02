@@ -56,7 +56,7 @@ static std::string ATTR[16][2] = {
  *          when a new piece is found. When all user defined pieces are
  *          specified, fill in the remainder with defaults.
  * 
- * @params argv the command line argument vector.
+ * @param argv the command line argument vector.
  */
 int AriaAttribute::init(char **argv)
 {
@@ -109,9 +109,9 @@ int AriaAttribute::init(char **argv)
  * @brief Set values in the attribute data structure using a key-value pairing
  *        system.
  * 
- * @params key the unique identifier in the attribute data structure which
+ * @param key the unique identifier in the attribute data structure which
  *             points to a value.
- * @params val the value which the key points to.
+ * @param val the value which the key points to.
  */
 int AriaAttribute::setstr(std::string key, std::string val)
 {
@@ -130,9 +130,9 @@ int AriaAttribute::setstr(std::string key, std::string val)
  * @brief Set values in the attribute data structure using a key-value pairing
  *        system.
  * 
- * @params key the unique identifier in the attribute data structure which
+ * @param key the unique identifier in the attribute data structure which
  *             points to a value.
- * @params val the value which the key points to.
+ * @param val the value which the key points to.
  */
 int AriaAttribute::setint(std::string key, int val)
 {
@@ -199,7 +199,7 @@ int AriaAttribute::setdef(void)
  * @brief Return the value in the attribute data structure that is pointed to by
  *        the given key.
  * 
- * @params key the unique identifier in the attribute data structure which
+ * @param key the unique identifier in the attribute data structure which
  *             points to a value.
  */
 std::string AriaAttribute::getstr(std::string key)
@@ -217,7 +217,7 @@ std::string AriaAttribute::getstr(std::string key)
  * @brief Return the value in the attribute data structure that is pointed to by
  *        the given key.
  * 
- * @params key the unique identifier in the attribute data structure which
+ * @param key the unique identifier in the attribute data structure which
  *             points to a value.
  */
 int AriaAttribute::getint(std::string key)

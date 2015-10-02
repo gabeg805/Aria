@@ -17,6 +17,7 @@
 #include "AriaUtility.h"
 #include "AriaAttribute.h"
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <string>
 
@@ -61,11 +62,55 @@ void AriaUtility::usage(void)
 /**
  * @brief Print error message and exit.
  * 
- * @params str the desired error message to print out.
+ * @param str the desired error message to print out.
  */
 void AriaUtility::error(std::string str)
 {
     static std::string prog = AriaAttribute::getstr("program");
     std::cout << prog << ": " << str << "." << std::endl;
     exit(1);
+}
+
+/* ************************************************************************** */
+/**
+ * @brief Check for errors based on the return status.
+ * 
+ * @param ret the return status of the previous command.
+ * 
+ * @param str a string to distinguish the error. Typically the command name of
+ *            the previous command.
+ * 
+ * @param err the errno, set by the previous command.
+ */
+void AriaUtility::checkery(int ret, const char *str, int err)
+{
+    if ( ret < 0 )
+        std::cout
+            << "aria: "
+            << str
+            << ": "
+            << std::strerror(err)
+            << std::endl;
+}
+
+/* ************************************************************************** */
+/**
+ * @brief Check for errors based on the return status.
+ * 
+ * @param ptr the return status of the previous command.
+ * 
+ * @param str a string to distinguish the error. Typically the command name of
+ *            the previous command.
+ * 
+ * @param err the errno, set by the previous command.
+ */
+void AriaUtility::checkery(void *ptr, const char *str, int err)
+{
+    if ( ptr == NULL )
+        std::cout
+            << "aria: "
+            << str
+            << ": "
+            << std::strerror(err)
+            << std::endl;
 }

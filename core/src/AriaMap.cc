@@ -16,6 +16,7 @@
 
 /* Includes */
 #include "AriaMap.h"
+#include "AriaUtility.h"
 #include <stdint.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -42,34 +43,17 @@ static        int     FFLAGS  = O_RDWR;
 static        int     FD      = -1;
 static struct MapData MEM[MLEN];
 
-void checkery(int ret, const char *str, int err)
-{
-    if ( ret < 0 )
-        std::cout
-            << "aria: "
-            << str
-            << ": "
-            << std::strerror(errno)
-            << std::endl;
-}
-
-void checkery(void *ptr, const char *str, int err)
-{
-    if ( ptr == NULL )
-        std::cout
-            << "aria: "
-            << str
-            << ": "
-            << std::strerror(errno)
-            << std::endl;
-}
-
-/* **********************************
- * ***** DATA SHARING INTERFACE *****
- * **********************************
+/* ************************************************************************** */
+/**
+ * @brief Interface to store information in shared memory.
+ * 
+ * @details Executes the whole process of mapping the shared memory region,
+ *          storing the data, unmapping, and cleanup.
+ * 
+ * @param data information to store in shared memory.
+ * 
+ * @param shift number of pixels to separate elements that overlap.
  */
-
-/* Store data in mapped memory */
 int AriaMap::store(struct MapData *data, long shift)
 {
     int status;
@@ -89,7 +73,19 @@ int AriaMap::store(struct MapData *data, long shift)
     return 0;
 }
 
-/* Shift y coordinate of notification bubble location */
+/* ************************************************************************** */
+/**
+ * @brief Separate the new notification from other notifications by the given
+ *        amount.
+ * 
+ * @details In the event that notifications overlap, ensure that the new
+ *          notification is separated from the present notifications by the given
+ *          amount.
+ * 
+ * @param data information to store in shared memory.
+ * 
+ * @param shift number of pixels to separate elements that overlap.
+ */
 int AriaMap::displace(struct MapData *data, long shift)
 {
     // long   x      = data->x;
@@ -123,7 +119,13 @@ int AriaMap::displace(struct MapData *data, long shift)
     return 0;
 }
 
-/* Clean up used mapped memory */
+/* ************************************************************************** */
+/**
+ * @brief Cleanup shared memory that is no longer being used.
+ * 
+ * @details Cleanup shared memory that is no longer being used and reorder the
+ *          shared memory region so that used memory is at the start.
+ */
 int AriaMap::cleanup(void)
 {
     std::cout << "Cleaning..." << std::endl;
@@ -158,12 +160,14 @@ int AriaMap::cleanup(void)
     return 0;
 }
 
-/* **********************************
- * ***** SHARED FILE DESCRIPTOR *****
- * **********************************
+/* ************************************************************************** */
+/**
+ * @brief Open a file descriptor to the shared memory region.
+ * 
+ * @details Open a file descriptor to the shared memory region. When the file
+ *          descriptor is determined, set a mutex on the file descriptor so that
+ *          there are no collisions between other instances of Aria.
  */
-
-/* Set memory mapped file descriptor */
 int AriaMap::openfd(void)
 {
     bool first = false;
@@ -175,16 +179,23 @@ int AriaMap::openfd(void)
 
     FD = open(MFILE, FFLAGS, FMODE);
     if ( FD < 0 ) {
-        checkery(FD, "open", errno);
+        AriaUtility::checkery(FD, "open", errno);
         return -1;
     }
 
     status = flock(FD, LOCK_EX);
-    checkery(status, "flock", errno);
+    AriaUtility::checkery(status, "flock", errno);
     return first;
 }
 
-/* Write to the shared memory region */
+/* ************************************************************************** */
+/**
+ * @brief Write data to the shared memory region.
+ * 
+ * @details Write data to the shared memory region, specifying how much data to
+ *          write.  This write will begin at the start of the shared memory
+ *          region.
+ */
 int AriaMap::writefd(struct MapData *w, size_t s)
 {
     if ( (FD < 0) || (MADDR == NULL) )
@@ -192,15 +203,21 @@ int AriaMap::writefd(struct MapData *w, size_t s)
 
     int status;
     status = lseek(FD, 0, SEEK_SET);
-    checkery(status, "lseek", errno);
+    AriaUtility::checkery(status, "lseek", errno);
     status = write(FD, w, s);
-    checkery(status, "write", errno);
+    AriaUtility::checkery(status, "write", errno);
     status = lseek(FD, 0, SEEK_SET);
-    checkery(status, "lseek", errno);
+    AriaUtility::checkery(status, "lseek", errno);
     return 0;
 }
 
-/* Read memory mapped region */
+/* ************************************************************************** */
+/**
+ * @brief Read from the shared memory region.
+ * 
+ * @details Read the number of bytes, beginning from the start of the shared
+ *          memory region.
+ */
 int AriaMap::readfd(struct MapData *r, size_t s)
 {
     if ( (FD < 0) || (MADDR == NULL) )
@@ -208,27 +225,31 @@ int AriaMap::readfd(struct MapData *r, size_t s)
 
     int status;
     status = lseek(FD, 0, SEEK_SET);
-    checkery(status, "lseek", errno);
+    AriaUtility::checkery(status, "lseek", errno);
     status = read(FD, r, s);
-    checkery(status, "read", errno);
+    AriaUtility::checkery(status, "read", errno);
     status = lseek(FD, 0, SEEK_SET);
-    checkery(status, "lseek", errno);
+    AriaUtility::checkery(status, "lseek", errno);
     return 0;
 }
 
-/* Clear the shared memory region */
+/* ************************************************************************** */
+/**
+ * @brief Clear the shared memory region.
+ * 
+ * @details Clear the shared memory region by writing 0 to the local copy and
+ *          the actual shared memory region.
+ */
 int AriaMap::clearfd(void)
 {
     clear();
     return writefd(MEM, MSIZE);
 }
 
-/* *************************
- * ***** MAPPED MEMORY *****
- * *************************
+/* ************************************************************************** */
+/**
+ * @brief Map the shared memory region.
  */
-
-/* Setup shared memory mapped region */
 int AriaMap::map(void)
 {
     if ( FD < 0 )
@@ -236,14 +257,17 @@ int AriaMap::map(void)
 
     MADDR = (long *) mmap(NULL, MSIZE, MPROT, MFLAGS, FD, 0);
     if ( MADDR == MAP_FAILED ) {
-        checkery(MADDR, "mmap", errno);
+        AriaUtility::checkery(MADDR, "mmap", errno);
         return -1;
     }
 
     return 0;
 }
 
-/* Unmap shared memory region */
+/* ************************************************************************** */
+/**
+ * @brief Unmap the shared memory region.
+ */
 int AriaMap::unmap(void)
 {
     if ( FD < 0 )
@@ -252,18 +276,18 @@ int AriaMap::unmap(void)
     size_t s = size();
     write(FD, MEM, s);
     int status = munmap(MADDR, MSIZE);
-    checkery(status, "munmap", errno);
+    AriaUtility::checkery(status, "munmap", errno);
     close(FD);
     return 0;
 }
 
 
-/* ****************************************
- * ***** DATA STRUCTURE FUNCTIONALITY *****
- * ****************************************
+/* ************************************************************************** */
+/**
+ * @brief Insert data to the local copy of the shared memory region.
+ * 
+ * @param data information to store in shared memory.
  */
-
-/* Insert data into the local copy of the mapped memory */
 int AriaMap::insert(struct MapData *data)
 {
     int len = length();
@@ -276,24 +300,40 @@ int AriaMap::insert(struct MapData *data)
 }
 
 
-/* Copy mapped memory to local copy */
+/* ************************************************************************** */
+/**
+ * @brief Copy data from the shared memory region to the local copy.
+ * 
+ * @param status a flag that indicates the status of the opened file descriptor.
+ */
 int AriaMap::copy(bool status)
 {
     int ret = (status) ? clearfd() : 0;
     return (ret == 0) ? readfd(MEM, MSIZE) : -1;
 }
 
-/* Find data in local mapped memory copy */
-int AriaMap::find(long val)
+/* ************************************************************************** */
+/**
+ * @brief Find an element in shared memory.
+ * 
+ * @details Searches for a match between the local copy data element's PID and
+ *          the given value.
+ * 
+ * @param id the PID to match with the local copy data.
+ */
+int AriaMap::find(long id)
 {
     size_t i;
     for ( i = 0; i < MLEN; ++i )
-        if ( MEM[i].id == val )
+        if ( MEM[i].id == id )
             return i;
     return -1;
 }
 
-/* Clear local mapped memory copy */
+/* ************************************************************************** */
+/**
+ * @brief Clear data in the local copy of the shared memory region.
+ */
 void AriaMap::clear(void)
 {
     size_t i;
@@ -301,6 +341,17 @@ void AriaMap::clear(void)
         memset(&MEM[i], 0, sizeof(*MEM));
 }
 
+/* ************************************************************************** */
+/**
+ * @brief Clear data in the local copy of the shared memory region.
+ * 
+ * @details Clears data in the local copy starting from the given start, and
+ *          going the given length.
+ * 
+ * @param start the index to begin with.
+ * 
+ * @param len the number of elements to clear.
+ */
 void AriaMap::clear(long start, long len)
 {
     size_t size = start+len;
@@ -309,7 +360,10 @@ void AriaMap::clear(long start, long len)
         memset(&MEM[i], 0, sizeof(*MEM));
 }
 
-/* Size of the local mapped memory copy */
+/* ************************************************************************** */
+/**
+ * @brief The size of the shared memory region.
+ */
 size_t AriaMap::size(void)
 {
     if ( (FD < 0) || (MADDR == NULL) )
@@ -319,7 +373,12 @@ size_t AriaMap::size(void)
     return (len == 0) ? 0 : (len-1)*sizeof(*MEM);
 }
 
-/* Length of the local mapped memory copy */
+/* ************************************************************************** */
+/**
+ * @brief The length of the shared memory region.
+ * 
+ * @details The number of elements (data chunks) in the shared memory region.
+ */
 size_t AriaMap::length(void)
 {
     if ( (FD < 0) || (MADDR == NULL) )
@@ -332,12 +391,10 @@ size_t AriaMap::length(void)
     return i;
 }
 
-/* *********************
- * ***** UTILITIES *****
- * *********************
+/* ************************************************************************** */
+/**
+ * @brief Print the contents of the shared memory region.
  */
-
-/* Print memory mapped data */ 
 void AriaMap::print(void)
 {
     size_t i;

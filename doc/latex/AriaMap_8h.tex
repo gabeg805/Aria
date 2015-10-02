@@ -5,46 +5,46 @@
 \begin{DoxyCompactItemize}
 \item 
 struct \hyperlink{structMapData}{Map\+Data}
-\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em Generic data structure to store in the shared memory region. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \subsection*{Namespaces}
 \begin{DoxyCompactItemize}
 \item 
  \hyperlink{namespaceAriaMap}{Aria\+Map}
-\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em Aria notification shared memory handler. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \subsection*{Functions}
 \begin{DoxyCompactItemize}
 \item 
 int \hyperlink{namespaceAriaMap_ab476269022f8048bbb7618a4830eeabd}{Aria\+Map\+::store} (struct \hyperlink{structMapData}{Map\+Data} $\ast$data, long shift)
-\item 
+\begin{DoxyCompactList}\small\item\em Interface to store information in shared memory. \end{DoxyCompactList}\item 
 int \hyperlink{namespaceAriaMap_aad25e1bc6cbd702fd569df804d90e464}{Aria\+Map\+::displace} (struct \hyperlink{structMapData}{Map\+Data} $\ast$data, long shift)
-\item 
+\begin{DoxyCompactList}\small\item\em Separate the new notification from other notifications by the given amount. \end{DoxyCompactList}\item 
 int \hyperlink{namespaceAriaMap_a0820778a918ad835c8b7b9dbd2b0ae9e}{Aria\+Map\+::cleanup} (void)
-\item 
+\begin{DoxyCompactList}\small\item\em Cleanup shared memory that is no longer being used. \end{DoxyCompactList}\item 
 int \hyperlink{namespaceAriaMap_a7775ad4992d7a25a554896bc3ed5e4ce}{Aria\+Map\+::openfd} (void)
-\item 
+\begin{DoxyCompactList}\small\item\em Open a file descriptor to the shared memory region. \end{DoxyCompactList}\item 
 int \hyperlink{namespaceAriaMap_ae9ed69be092b57caff848ae611339adf}{Aria\+Map\+::writefd} (struct \hyperlink{structMapData}{Map\+Data} $\ast$w, size\+\_\+t s)
-\item 
+\begin{DoxyCompactList}\small\item\em Write data to the shared memory region. \end{DoxyCompactList}\item 
 int \hyperlink{namespaceAriaMap_a85b66efeb9b3e717ea5c8ee3f72bec1a}{Aria\+Map\+::readfd} (struct \hyperlink{structMapData}{Map\+Data} $\ast$r, size\+\_\+t s)
-\item 
+\begin{DoxyCompactList}\small\item\em Read from the shared memory region. \end{DoxyCompactList}\item 
 int \hyperlink{namespaceAriaMap_a4f96bec0326c57c4fb11595fb5e48e52}{Aria\+Map\+::clearfd} (void)
-\item 
+\begin{DoxyCompactList}\small\item\em Clear the shared memory region. \end{DoxyCompactList}\item 
 int \hyperlink{namespaceAriaMap_a16dcceca67f06165428001241996ab14}{Aria\+Map\+::map} (void)
-\item 
+\begin{DoxyCompactList}\small\item\em Map the shared memory region. \end{DoxyCompactList}\item 
 int \hyperlink{namespaceAriaMap_a05e8b260d9c410e0dec752d41e22dd98}{Aria\+Map\+::unmap} (void)
-\item 
+\begin{DoxyCompactList}\small\item\em Unmap the shared memory region. \end{DoxyCompactList}\item 
 int \hyperlink{namespaceAriaMap_abde04797d8f7dca3a40b492d7e7788a6}{Aria\+Map\+::insert} (struct \hyperlink{structMapData}{Map\+Data} $\ast$data)
-\item 
+\begin{DoxyCompactList}\small\item\em Insert data to the local copy of the shared memory region. \end{DoxyCompactList}\item 
 int \hyperlink{namespaceAriaMap_af2742e0765093c4fc620caaaa76c38bc}{Aria\+Map\+::copy} (bool status)
-\item 
-int \hyperlink{namespaceAriaMap_a9d3f96512f5841571994008631b27b48}{Aria\+Map\+::find} (long val)
-\item 
+\begin{DoxyCompactList}\small\item\em Copy data from the shared memory region to the local copy. \end{DoxyCompactList}\item 
+int \hyperlink{namespaceAriaMap_ada0d85710793da4b08130a9b21a56090}{Aria\+Map\+::find} (long id)
+\begin{DoxyCompactList}\small\item\em Find an element in shared memory. \end{DoxyCompactList}\item 
 void \hyperlink{namespaceAriaMap_a1ae3654679044db830871fa3b0d409f1}{Aria\+Map\+::clear} (void)
-\item 
+\begin{DoxyCompactList}\small\item\em Clear data in the local copy of the shared memory region. \end{DoxyCompactList}\item 
 void \hyperlink{namespaceAriaMap_a16bcb7ece1c6912d7372d15f38b8057e}{Aria\+Map\+::clear} (long start, long len)
-\item 
+\begin{DoxyCompactList}\small\item\em Clear data in the local copy of the shared memory region. \end{DoxyCompactList}\item 
 size\+\_\+t \hyperlink{namespaceAriaMap_a6e02547a1c5f23b8b520faaf4ac435d5}{Aria\+Map\+::size} (void)
-\item 
+\begin{DoxyCompactList}\small\item\em The size of the shared memory region. \end{DoxyCompactList}\item 
 size\+\_\+t \hyperlink{namespaceAriaMap_a234dc58cf6e47d321f7a9743fd2635ec}{Aria\+Map\+::length} (void)
-\item 
+\begin{DoxyCompactList}\small\item\em The length of the shared memory region. \end{DoxyCompactList}\item 
 void \hyperlink{namespaceAriaMap_a2c1667afce41963288cba56437c48df2}{Aria\+Map\+::print} (void)
-\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em Print the contents of the shared memory region. \end{DoxyCompactList}\end{DoxyCompactItemize}

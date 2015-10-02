@@ -14,21 +14,30 @@
  */
 
 /* Header guard */
-#ifndef ARIA_MAP_H
-#define ARIA_MAP_H
+#ifndef ARIA_COMMON_ARIAMAP_H
+#define ARIA_COMMON_ARIAMAP_H
 
 /* Includes */
 #include <cstddef>
 
+/* ************************************************************************** */
+/**
+ * @brief Generic data structure to store in the shared memory region.
+ */
 struct MapData {
-    long id;
-    long x;
-    long y;
-    long w;
-    long h;
+    long id; /**< Current process PID. */
+    long x;  /**< On-screen x coordinate of the notification bubble. */
+    long y;  /**< On-screen y coordinate of the notification bubble. */
+    long w;  /**< Width (px) of the notification bubble. */
+    long h;  /**< Height (px) of the notification bubble. */
 };
 
-/* Classes */
+/* ************************************************************************** */
+/**
+ * @brief Aria notification shared memory handler.
+ * 
+ * @details Share notification data through a memory mapped region.
+*/
 namespace AriaMap
 {
     int    store(struct MapData *data, long shift);
@@ -45,7 +54,7 @@ namespace AriaMap
 
     int    insert(struct MapData *data);
     int    copy(bool status);
-    int    find(long val);
+    int    find(long id);
     void   clear(void);
     void   clear(long start, long len);
     size_t size(void);
@@ -54,4 +63,4 @@ namespace AriaMap
     void   print(void);
 };
 
-#endif /* ARIA_MAP_H */
+#endif /* ARIA_COMMON_ARIAMAP_H */

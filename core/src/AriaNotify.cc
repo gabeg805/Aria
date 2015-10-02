@@ -26,8 +26,6 @@
 #include <iostream>
 #include <string>
 
-// static void cleanup(int sig);
-
 /* ************************************************************************** */
 /**
  * Construct the notification window and container.
@@ -108,7 +106,7 @@ void AriaNotify::position(void)
  * @details Shuts down the program after cleaning up stored data. Used as a
  *          static member function due to its status as a signal handler.
  * 
- * @params sig the signal that was raised. Incidentally, also the exit status.
+ * @param sig the signal that was raised. Incidentally, also the exit status.
  */
 void AriaNotify::cleanup(int sig)
 {
