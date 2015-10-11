@@ -57,11 +57,8 @@ void AriaNotify::init(char **argv)
     if ( title.empty() && body.empty() )
         AriaUtility::error("No title or body text set");
 
-    // std::signal(SIGHUP,  cleanup);
     std::signal(SIGINT,  cleanup);
     std::signal(SIGQUIT, cleanup);
-    // std::signal(SIGKILL, cleanup);
-    // std::signal(SIGSEGV, cleanup);
     std::signal(SIGTERM, cleanup);
 }
 

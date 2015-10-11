@@ -26,8 +26,8 @@
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
 
 /* Declares */
-const std::string CONF_FILE = "/home/gabeg/scripts/programs/aria/aria.conf";
-static std::string ATTR[16][2] = {
+static const std::string CONF_FILE = "/home/gabeg/scripts/programs/aria/aria.conf";
+static std::string ATTR[16][2]     = {
     {"screen",     ""},
     {"title",      ""},
     {"body",       ""},
@@ -115,7 +115,7 @@ int AriaAttribute::init(char **argv)
  */
 int AriaAttribute::setstr(std::string key, std::string val)
 {
-    size_t len = sizeof(ATTR) / sizeof(ATTR[0]);
+    size_t len = ARRAY_SIZE(ATTR);
     size_t i;
     for ( i = 0; i < len; ++i )
         if ( ATTR[i][0].compare(key) == 0 ) {
@@ -136,7 +136,7 @@ int AriaAttribute::setstr(std::string key, std::string val)
  */
 int AriaAttribute::setint(std::string key, int val)
 {
-    size_t            len = sizeof(ATTR) / sizeof(ATTR[0]);
+    size_t            len = ARRAY_SIZE(ATTR);
     size_t            i;
     std::stringstream ss;
     for ( i = 0; i < len; ++i )
@@ -204,7 +204,7 @@ int AriaAttribute::setdef(void)
  */
 std::string AriaAttribute::getstr(std::string key)
 {
-    size_t len = sizeof(ATTR) / sizeof(ATTR[0]);
+    size_t len = ARRAY_SIZE(ATTR);
     size_t i;
     for ( i = 0; i < len; ++i )
         if ( ATTR[i][0].compare(key) == 0 )
@@ -231,7 +231,7 @@ int AriaAttribute::getint(std::string key)
  */
 void AriaAttribute::print(void)
 {
-    size_t len = sizeof(ATTR) / sizeof(ATTR[0]);
+    size_t len = ARRAY_SIZE(ATTR);
     size_t i;
 
     for ( i = 0; i < len; ++i )

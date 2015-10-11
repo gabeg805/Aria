@@ -6,8 +6,7 @@
  * Email:   gabeg@bu.edu
  * License: The MIT License (MIT)
  * 
- * Syntax: $ TBD
- *         $ TBD
+ * Syntax: aria [option] [--title <title>] [--body <body>]
  * 
  * Description: Creates the Aria Notification Bubble.
  * 

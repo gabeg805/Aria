@@ -6,7 +6,7 @@
  * Email:   gabeg@bu.edu
  * License: The MIT License (MIT)
  * 
- * Description: The Aria Notification Bubble object.
+ * Description: The Aria Notification Bubble.
  * 
  * Notes: None.
  * 
@@ -14,8 +14,8 @@
  */
 
 /* Header guard */
-#ifndef ARIA_CORE_ARIANOTIFY_H
-#define ARIA_CORE_ARIANOTIFY_H
+#ifndef ARIA_CORE_INCLUDE_ARIANOTIFY_H
+#define ARIA_CORE_INCLUDE_ARIANOTIFY_H
 
 /* Includes */
 #include <gtkmm.h>
@@ -50,4 +50,4 @@ public:
     Gtk::Box      bubble;
 };
 
-#endif /* ARIA_CORE_ARIANOTIFY_H */
+#endif /* ARIA_CORE_INCLUDE_ARIANOTIFY_H */

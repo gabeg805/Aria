@@ -6,7 +6,7 @@
  * Email:   gabeg@bu.edu
  * License: The MIT License (MIT)
  * 
- * Description: Manage Aria Notification Bubble attributes.
+ * Description: Aria Notification Bubble utilities.
  * 
  * Notes: None.
  * 

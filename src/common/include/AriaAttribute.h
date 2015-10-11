@@ -14,8 +14,8 @@
  */
 
 // Header guard
-#ifndef ARIA_COMMON_ARIAATTRIBUTE_H
-#define ARIA_COMMON_ARIAATTRIBUTE_H
+#ifndef ARIA_COMMON_INCLUDE_ARIAATTRIBUTE_H
+#define ARIA_COMMON_INCLUDE_ARIAATTRIBUTE_H
 
 /* Includes */
 #include <string>
@@ -39,4 +39,4 @@ namespace AriaAttribute
     void        print(void);
 };
 
-#endif /* ARIA_COMMON_ARIAATTRIBUTE_H */
+#endif /* ARIA_COMMON_INCLUDE_ARIAATTRIBUTE_H */

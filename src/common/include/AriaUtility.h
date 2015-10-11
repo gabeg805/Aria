@@ -6,7 +6,7 @@
  * Email:   gabeg@bu.edu
  * License: The MIT License (MIT)
  * 
- * Description: The Aria utility tool.
+ * Description: Aria Notification Bubble utilities.
  * 
  * Notes: None.
  * 
@@ -14,8 +14,8 @@
  */
 
 /* Header guard */
-#ifndef ARIA_COMMON_ARIAUTILITY_H
-#define ARIA_COMMON_ARIAUTILITY_H
+#ifndef ARIA_COMMON_INCLUDE_ARIAUTILITY_H
+#define ARIA_COMMON_INCLUDE_ARIAUTILITY_H
 
 /* Includes */
 #include <string>
@@ -33,4 +33,4 @@ namespace AriaUtility
     void checkery(void *ptr, const char *str, int err);
 };
 
-#endif /* ARIA_COMMON_ARIAUTILITY_H */
+#endif /* ARIA_COMMON_INCLUDE_ARIAUTILITY_H */

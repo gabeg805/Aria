@@ -52,7 +52,6 @@ $(OBJ_DIR)/%.o: $(CORE_SRC_DIR)/%.cc
 		-o $@ \
 		$(CINC)
 
-
 .PHONY: clean
 clean : 
 	@rm -v -f $(OBJ)

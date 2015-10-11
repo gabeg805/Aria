@@ -6,8 +6,7 @@
  * Email:   gabeg@bu.edu
  * License: The MIT License (MIT)
  * 
- * Description: Create and manage a shared memory region for interprocess
- *              communication.
+ * Description: Create and manage Aria Notification Bubble shared memory.
  * 
  * Notes: None.
  * 

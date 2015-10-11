@@ -6,7 +6,7 @@
  * Email:   gabeg@bu.edu
  * License: The MIT License (MIT)
  * 
- * Description: Manage Aria Notification Bubble attributes.
+ * Description: Create and manage Aria Notification Bubble shared memory.
  * 
  * Notes: None.
  * 
@@ -14,8 +14,8 @@
  */
 
 /* Header guard */
-#ifndef ARIA_COMMON_ARIAMAP_H
-#define ARIA_COMMON_ARIAMAP_H
+#ifndef ARIA_COMMON_INCLUDE_ARIAMAP_H
+#define ARIA_COMMON_INCLUDE_ARIAMAP_H
 
 /* Includes */
 #include <cstddef>
@@ -63,4 +63,4 @@ namespace AriaMap
     void   print(void);
 };
 
-#endif /* ARIA_COMMON_ARIAMAP_H */
+#endif /* ARIA_COMMON_INCLUDE_ARIAMAP_H */
