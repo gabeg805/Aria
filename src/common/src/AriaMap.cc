@@ -178,12 +178,12 @@ int AriaMap::openfd(void)
 
     FD = open(MFILE, FFLAGS, FMODE);
     if ( FD < 0 ) {
-        AriaUtility::checkery(FD, "open", errno);
+        AriaUtility::errcheck(FD, "open", errno);
         return -1;
     }
 
     status = flock(FD, LOCK_EX);
-    AriaUtility::checkery(status, "flock", errno);
+    AriaUtility::errcheck(status, "flock", errno);
     return first;
 }
 
@@ -202,11 +202,11 @@ int AriaMap::writefd(struct MapData *w, size_t s)
 
     int status;
     status = lseek(FD, 0, SEEK_SET);
-    AriaUtility::checkery(status, "lseek", errno);
+    AriaUtility::errcheck(status, "lseek", errno);
     status = write(FD, w, s);
-    AriaUtility::checkery(status, "write", errno);
+    AriaUtility::errcheck(status, "write", errno);
     status = lseek(FD, 0, SEEK_SET);
-    AriaUtility::checkery(status, "lseek", errno);
+    AriaUtility::errcheck(status, "lseek", errno);
     return 0;
 }
 
@@ -224,11 +224,11 @@ int AriaMap::readfd(struct MapData *r, size_t s)
 
     int status;
     status = lseek(FD, 0, SEEK_SET);
-    AriaUtility::checkery(status, "lseek", errno);
+    AriaUtility::errcheck(status, "lseek", errno);
     status = read(FD, r, s);
-    AriaUtility::checkery(status, "read", errno);
+    AriaUtility::errcheck(status, "read", errno);
     status = lseek(FD, 0, SEEK_SET);
-    AriaUtility::checkery(status, "lseek", errno);
+    AriaUtility::errcheck(status, "lseek", errno);
     return 0;
 }
 
@@ -256,7 +256,7 @@ int AriaMap::map(void)
 
     MADDR = (long *) mmap(NULL, MSIZE, MPROT, MFLAGS, FD, 0);
     if ( MADDR == MAP_FAILED ) {
-        AriaUtility::checkery(MADDR, "mmap", errno);
+        AriaUtility::errcheck(MADDR, "mmap", errno);
         return -1;
     }
 
@@ -275,7 +275,7 @@ int AriaMap::unmap(void)
     size_t s = size();
     write(FD, MEM, s);
     int status = munmap(MADDR, MSIZE);
-    AriaUtility::checkery(status, "munmap", errno);
+    AriaUtility::errcheck(status, "munmap", errno);
     close(FD);
     return 0;
 }

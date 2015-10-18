@@ -55,7 +55,7 @@ void AriaNotify::init(char **argv)
     std::string title = AriaAttribute::getstr("title");
     std::string body  = AriaAttribute::getstr("body");
     if ( title.empty() && body.empty() )
-        AriaUtility::error("No title or body text set");
+        AriaUtility::errprint("No title or body text set");
 
     std::signal(SIGINT,  cleanup);
     std::signal(SIGQUIT, cleanup);

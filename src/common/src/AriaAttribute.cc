@@ -26,7 +26,7 @@
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
 
 /* Declares */
-static const std::string CONF_FILE = "/home/gabeg/scripts/programs/aria/aria.conf";
+static const std::string CONF_FILE = "/home/gabeg/scripts/programs/aria/src/common/aria.conf";
 static std::string ATTR[16][2]     = {
     {"screen",     ""},
     {"title",      ""},

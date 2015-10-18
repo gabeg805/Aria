@@ -64,7 +64,7 @@ void AriaUtility::usage(void)
  * 
  * @param str the desired error message to print out.
  */
-void AriaUtility::error(std::string str)
+void AriaUtility::errprint(std::string str)
 {
     static std::string prog = AriaAttribute::getstr("program");
     std::cout << prog << ": " << str << "." << std::endl;
@@ -82,15 +82,12 @@ void AriaUtility::error(std::string str)
  * 
  * @param err the errno, set by the previous command.
  */
-void AriaUtility::checkery(int ret, const char *str, int err)
+void AriaUtility::errcheck(int ret, const char *str, int err)
 {
+    static std::string prog = AriaAttribute::getstr("program");
     if ( ret < 0 )
-        std::cout
-            << "aria: "
-            << str
-            << ": "
-            << std::strerror(err)
-            << std::endl;
+        std::cout << prog << ": " << str << ": " << std::strerror(err)
+                  << std::endl;
 }
 
 /* ************************************************************************** */
@@ -104,13 +101,10 @@ void AriaUtility::checkery(int ret, const char *str, int err)
  * 
  * @param err the errno, set by the previous command.
  */
-void AriaUtility::checkery(void *ptr, const char *str, int err)
+void AriaUtility::errcheck(void *ptr, const char *str, int err)
 {
+    static std::string prog = AriaAttribute::getstr("program");
     if ( ptr == NULL )
-        std::cout
-            << "aria: "
-            << str
-            << ": "
-            << std::strerror(err)
-            << std::endl;
+        std::cout << prog << ": " << str << ": " << std::strerror(err)
+                  << std::endl;
 }
