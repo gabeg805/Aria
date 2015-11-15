@@ -31,12 +31,12 @@
 namespace AriaAttribute
 {
     int         init(char **argv);
-    int         setstr(std::string key, std::string val);
-    int         setint(std::string key, int val);
-    int         setdef(void);
     std::string getstr(std::string key);
     int         getint(std::string key);
-    void        print(void);
+    int         setstr(std::string key, std::string val);
+    int         setint(std::string key, int val);
+    int         setdefaults(void);
+    void        printlist(void);
 };
 
 #endif /* ARIA_COMMON_INCLUDE_ARIAATTRIBUTE_H */

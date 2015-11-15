@@ -27,7 +27,7 @@
 
 /* Declares */
 static const std::string CONF_FILE = "/home/gabeg/scripts/programs/aria/src/common/aria.conf";
-static std::string ATTR[16][2]     = {
+static std::string ATTR[17][2]     = {
     {"screen",     ""},
     {"title",      ""},
     {"body",       ""},
@@ -39,6 +39,7 @@ static std::string ATTR[16][2]     = {
     {"timer",      "2"},
     {"opacity",    "1"},
     {"margin",     "7"},
+    {"delay",      "0"},
     {"title-size", "16"},
     {"body-size",  "12"},
     {"background", "#ffa500"},
@@ -88,6 +89,8 @@ int AriaAttribute::init(char **argv)
             AriaAttribute::setstr("opacity", *argv);
         else if ( (str.compare("-m") == 0) || (str.compare("--margin") == 0) ) 
             AriaAttribute::setstr("margin", *argv);
+        else if ( (str.compare("-d") == 0) || (str.compare("--delay") == 0) ) 
+            AriaAttribute::setstr("delay", *argv);
         else if ( (str.compare("-ts") == 0) || (str.compare("--title-size") == 0) ) 
             AriaAttribute::setstr("title_size", *argv);
         else if ( (str.compare("-bs") == 0) || (str.compare("--body-size") == 0) ) 
@@ -100,8 +103,39 @@ int AriaAttribute::init(char **argv)
             continue;
     }
 
-    AriaAttribute::setdef();
+    AriaAttribute::setdefaults();
     return 0;
+}
+
+/* ************************************************************************** */
+/**
+ * @brief Return the value in the attribute data structure that is pointed to by
+ *        the given key.
+ * 
+ * @param key the unique identifier in the attribute data structure which
+ *             points to a value.
+ */
+std::string AriaAttribute::getstr(std::string key)
+{
+    size_t len = ARRAY_SIZE(ATTR);
+    size_t i;
+    for ( i = 0; i < len; ++i )
+        if ( ATTR[i][0].compare(key) == 0 )
+            return ATTR[i][1];
+    return "";
+}
+
+/* ************************************************************************** */
+/**
+ * @brief Return the value in the attribute data structure that is pointed to by
+ *        the given key.
+ * 
+ * @param key the unique identifier in the attribute data structure which
+ *             points to a value.
+ */
+int AriaAttribute::getint(std::string key)
+{
+    return atoi(AriaAttribute::getstr(key).c_str());
 }
 
 /* ************************************************************************** */
@@ -153,7 +187,7 @@ int AriaAttribute::setint(std::string key, int val)
  * @brief Set default values in the attribute data structure by reading and
  *        parsing the configuration file.
  */
-int AriaAttribute::setdef(void)
+int AriaAttribute::setdefaults(void)
 {
     std::ifstream is(CONF_FILE.c_str(), std::ifstream::in);
     std::string   delimiter = ":";
@@ -196,46 +230,14 @@ int AriaAttribute::setdef(void)
 
 /* ************************************************************************** */
 /**
- * @brief Return the value in the attribute data structure that is pointed to by
- *        the given key.
- * 
- * @param key the unique identifier in the attribute data structure which
- *             points to a value.
- */
-std::string AriaAttribute::getstr(std::string key)
-{
-    size_t len = ARRAY_SIZE(ATTR);
-    size_t i;
-    for ( i = 0; i < len; ++i )
-        if ( ATTR[i][0].compare(key) == 0 )
-            return ATTR[i][1];
-    return "";
-}
-
-/* ************************************************************************** */
-/**
- * @brief Return the value in the attribute data structure that is pointed to by
- *        the given key.
- * 
- * @param key the unique identifier in the attribute data structure which
- *             points to a value.
- */
-int AriaAttribute::getint(std::string key)
-{
-    return atoi(AriaAttribute::getstr(key).c_str());
-}
-
-/* ************************************************************************** */
-/**
  * @brief Print every key-value pair in the attribute data structure.
  */
-void AriaAttribute::print(void)
+void AriaAttribute::printlist(void)
 {
     size_t len = ARRAY_SIZE(ATTR);
     size_t i;
 
     for ( i = 0; i < len; ++i )
-        std::cout << "i: " << i 
-                  << " | attr0: " << ATTR[i][0]
-                  << " | attr1: " << ATTR[i][1] << std::endl;
+        std::cout << "key: " << ATTR[i][0]
+                  << " | value: " << ATTR[i][1] << std::endl;
 }

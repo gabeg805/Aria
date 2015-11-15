@@ -42,6 +42,7 @@ void AriaUtility::usage(void)
               << "    -o, --opacity <value>        Opacity (0 <= value <= 1)\n"
               << "    -m, --margin <value>         Box margins(0 < value)\n"
               << "    -f, --font <font>            Text font\n"
+              << "    -d, --delay <seconds>        Amount of time to delay between program calls.\n"
               << "    -ts, --title-size <size>     Size of text for the title\n"
               << "    -bs, --body-size <size>      Size of text for the body\n"
               << "    -bg, --background <color>    Color of the notification bubble\n"
@@ -67,44 +68,19 @@ void AriaUtility::usage(void)
 void AriaUtility::errprint(std::string str)
 {
     static std::string prog = AriaAttribute::getstr("program");
-    std::cout << prog << ": " << str << "." << std::endl;
-    exit(1);
+    std::cout << prog << ": " << str << std::endl;
 }
 
 /* ************************************************************************** */
 /**
- * @brief Check for errors based on the return status.
+ * @brief Print error message and exit.
  * 
- * @param ret the return status of the previous command.
- * 
- * @param str a string to distinguish the error. Typically the command name of
- *            the previous command.
+ * @param str the desired error message to print out.
  * 
  * @param err the errno, set by the previous command.
  */
-void AriaUtility::errcheck(int ret, const char *str, int err)
+void AriaUtility::errprint(std::string str, int err)
 {
     static std::string prog = AriaAttribute::getstr("program");
-    if ( ret < 0 )
-        std::cout << prog << ": " << str << ": " << std::strerror(err)
-                  << std::endl;
-}
-
-/* ************************************************************************** */
-/**
- * @brief Check for errors based on the return status.
- * 
- * @param ptr the return status of the previous command.
- * 
- * @param str a string to distinguish the error. Typically the command name of
- *            the previous command.
- * 
- * @param err the errno, set by the previous command.
- */
-void AriaUtility::errcheck(void *ptr, const char *str, int err)
-{
-    static std::string prog = AriaAttribute::getstr("program");
-    if ( ptr == NULL )
-        std::cout << prog << ": " << str << ": " << std::strerror(err)
-                  << std::endl;
+    std::cout << prog << ": " << str << ": " << std::strerror(err) << std::endl;
 }

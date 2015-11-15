@@ -7,7 +7,7 @@ CINC    =
 
 ## Program source files
 PROGRAM = aria
-COMMON  = AriaAttribute AriaMap AriaUtility
+COMMON  = AriaAttribute AriaSharedMem AriaUtility
 CORE    = AriaNotify $(PROGRAM)
 NAMES   = $(COMMON) $(CORE)  
 DOXY    = doxy.conf

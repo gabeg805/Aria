@@ -35,9 +35,9 @@ public:
 
     void init(char **argv);
     void show(void);
-    void position(void);
-    static void cleanup(int sig);
+    void movepos(void);
 
+private:
     void set_title(void);
     void set_body(void);
     void set_notify_text(std::string field);
@@ -46,6 +46,7 @@ public:
     void set_margin(void);
     void set_size(void);
     void set_timer(void);
+    static void cleanup(int sig);
 
     Gtk::Box      bubble;
 };

@@ -26,14 +26,8 @@ int main(int argc, char** argv)
 
     AriaNotify Aria;
     Aria.init(argv);
-    Aria.set_title();
-    Aria.set_body();
-    Aria.set_background();
-    Aria.set_foreground();
-    Aria.set_margin();
-    Aria.set_timer();
     Aria.show();
-    Aria.position();
+    Aria.movepos();
 
     return app->run(Aria);
 }

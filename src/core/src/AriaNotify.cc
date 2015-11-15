@@ -16,8 +16,10 @@
 /* Includes */
 #include "AriaNotify.h"
 #include "AriaAttribute.h"
-#include "AriaMap.h"
+#include "AriaSharedMem.h"
 #include "AriaUtility.h"
+#include <time.h>
+#include <unistd.h>
 #include <gtkmm.h>
 #include <gdkmm.h>
 #include <pangomm/fontdescription.h>
@@ -54,8 +56,17 @@ void AriaNotify::init(char **argv)
 
     std::string title = AriaAttribute::getstr("title");
     std::string body  = AriaAttribute::getstr("body");
-    if ( title.empty() && body.empty() )
-        AriaUtility::errprint("No title or body text set");
+    if ( title.empty() && body.empty() ) {
+        AriaUtility::errprint("No title or body text set.");
+        exit(1);
+    }
+
+    int delay = AriaAttribute::getint("delay");
+    bool stuff = AriaSharedMem::isempty();
+    if ( (delay > 0) && !stuff ) {
+        if ( (time(0)-AriaSharedMem::getlast()->time) < delay )
+            exit(1);
+    }
 
     std::signal(SIGINT,  cleanup);
     std::signal(SIGQUIT, cleanup);
@@ -68,9 +79,15 @@ void AriaNotify::init(char **argv)
  */
 void AriaNotify::show(void)
 {
+    this->set_title();
+    this->set_body();
+    this->set_background();
+    this->set_foreground();
+    this->set_margin();
+    this->set_timer();
     this->add(bubble);
     this->show_all_children();
-    set_size();
+    this->set_size();
 }
 
 /* ************************************************************************** */
@@ -83,14 +100,16 @@ void AriaNotify::show(void)
  *          a means of interprocess communication with other Aria
  *          applications.
  */
-void AriaNotify::position(void)
+void AriaNotify::movepos(void)
 {
-    struct MapData data = {.id = getpid(),
-                           .x  = AriaAttribute::getint("xpos"),
-                           .y  = AriaAttribute::getint("ypos"),
-                           .w  = AriaAttribute::getint("width"),
-                           .h  = AriaAttribute::getint("height")};
-    AriaMap::store(&data, 10);
+    struct SharedMemType data = {.id   = getpid(),
+                                 .time = time(0),
+                                 .x    = AriaAttribute::getint("xpos"),
+                                 .y    = AriaAttribute::getint("ypos"),
+                                 .w    = AriaAttribute::getint("width"),
+                                 .h    = AriaAttribute::getint("height")
+    };
+    AriaSharedMem::add(&data, 10);
 
     data.x = (AriaAttribute::getint("screen") - data.w) - data.x;
     this->move(data.x, data.y);
@@ -107,7 +126,7 @@ void AriaNotify::position(void)
  */
 void AriaNotify::cleanup(int sig)
 {
-    AriaMap::cleanup();
+    AriaSharedMem::remove();
     exit(sig);
 }
 

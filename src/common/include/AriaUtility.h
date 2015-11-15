@@ -29,8 +29,7 @@ namespace AriaUtility
 {
     void usage(void);
     void errprint(std::string str);
-    void errcheck(int   ret, const char *str, int err);
-    void errcheck(void *ptr, const char *str, int err);
+    void errprint(std::string str, int err);
 };
 
 #endif /* ARIA_COMMON_INCLUDE_ARIAUTILITY_H */
