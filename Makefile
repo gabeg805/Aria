@@ -55,7 +55,7 @@ $(OBJ_DIR)/%.o: $(CORE_SRC_DIR)/%.cc
 		-o $@ \
 		$(CINC)
 
-.PHONY: clean doc
+.PHONY: clean doc test
 clean: 
 	@rm -v -f $(OBJ)
 	@rm -v -f $(OBJ_DIR)/*
@@ -66,3 +66,13 @@ clean:
 
 doc: $(DOC)
 	@doxygen $(DOC)
+
+test: $(PROGRAM)
+	$(PROGRAM) --title "Title" --body "Body" \
+		--width 200 --height 100 \
+		--xpos  700 --ypos   400 \
+		--time    5 \
+		--opacity 0.5 \ #fix
+		--margin 40 \
+		--title-size 24 --body-size 16 \ #fix
+		--background "#00a866" --foreground "#ffffff"
