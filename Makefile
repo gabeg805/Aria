@@ -1,78 +1,65 @@
-## Compiler
+# ------------------------------------------------------------------------------
+# Project
+PROJECT = aria
+
+# ------------------------------------------------------------------------------
+# Compiler settings
 CC      = g++
-LIBS    = gtkmm-3.0
-CFLAGS  = -g -Wall -lX11 -O0 -std=c++11
-CFLAGS += `pkg-config $(LIBS) --cflags --libs`
-CINC    =
+CFLAGS  = -g -Wall -std=c++11
+LIBS    = -lX11 -I $(INCDIR) `pkg-config $(PKGS) --cflags --libs`
+PKGS    = gtkmm-3.0
 
-## Program source files
-PROGRAM = aria
-COMMON  = AriaAttribute AriaSharedMem AriaUtility
-CORE    = AriaNotify $(PROGRAM)
-NAMES   = $(COMMON) $(CORE)  
-DOXY    = doxy.conf
-MEMMAP  = /tmp/ariamap
+# ------------------------------------------------------------------------------
+# Directories
+BUILDDIR = .
+SRCDIR   = $(BUILDDIR)/src
+OBJDIR   = $(BUILDDIR)/obj
+INCDIR   = $(BUILDDIR)/include
+DOCDIR   = $(BUILDDIR)/doc
 
-## Directories used
-DOC_DIR    = ./doc
-COMMON_DIR = ./src/common
-CORE_DIR   = ./src/core
-SRC_DIR    = src
-INC_DIR    = include
-OBJ_DIR    = ./obj
+# ------------------------------------------------------------------------------
+# Files
+SRC    = $(wildcard $(SRCDIR)/*.cpp)
+OBJ    = $(SRC:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o)
+DOC    = $(DOCDIR)/doxy.conf
+MEMMAP = /tmp/ariamap
 
-COMMON_SRC_DIR = $(COMMON_DIR)/$(SRC_DIR)
-COMMON_INC_DIR = $(COMMON_DIR)/$(INC_DIR)
-CORE_SRC_DIR   = $(CORE_DIR)/$(SRC_DIR)
-CORE_INC_DIR   = $(CORE_DIR)/$(INC_DIR)
+# ------------------------------------------------------------------------------
+# Default target
+all: $(PROJECT)
 
-CINC += -I $(COMMON_INC_DIR)
-CINC += -I $(CORE_INC_DIR)
+install: all
 
-## Add extension to file names
-SRC  = $(addprefix $(COMMON_SRC_DIR)/, $(addsuffix .cc, $(COMMON)))
-SRC += $(addprefix $(CORE_SRC_DIR)/,   $(addsuffix .cc, $(CORE)))
-OBJ  = $(addprefix $(OBJ_DIR)/,    $(addsuffix .o,  $(NAMES)))
-DOC  = $(DOC_DIR)/$(DOXY)
+# Compile targets
+$(PROJECT): $(OBJ)
+	$(CC) $(CFLAGS) $(LIBS) \
+		-o $(PROJECT) $(OBJ)
 
-## Makefile actions
-all: $(PROGRAM) doc
-
-$(PROGRAM): $(OBJ)
-	$(CC) $(CFLAGS) \
-		-o $(PROGRAM) $(OBJ) \
-		$(CINC)
-
-$(OBJ_DIR)/%.o: $(COMMON_SRC_DIR)/%.cc
-	$(CC) $(CFLAGS) \
-		-c $< \
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
+	$(CC) $(CFLAGS) $(LIBS) \
 		-o $@ \
-		$(CINC)
+		-c $<
 
-$(OBJ_DIR)/%.o: $(CORE_SRC_DIR)/%.cc
-	$(CC) $(CFLAGS) \
-		-c $< \
-		-o $@ \
-		$(CINC)
-
+# Phony targets
 .PHONY: clean doc test
-clean: 
+clean : 
+	@rm -v -f $(PROJECT)
 	@rm -v -f $(OBJ)
-	@rm -v -f $(OBJ_DIR)/*
+	@rm -v -f $(OBJDIR)/*
 	@rm -v -f $(MEMMAP)
-	@rm -v -f $(PROGRAM)
-	@rm -v -f -r $(DOC_DIR)/html
-	@rm -v -f -r $(DOC_DIR)/latex
+	@rm -f -r $(DOCDIR)/html
+	@rm -f -r $(DOCDIR)/latex
 
 doc: $(DOC)
 	@doxygen $(DOC)
 
-test: $(PROGRAM)
-	$(PROGRAM) --title "Title" --body "Body" \
+# Fix opacity and title/body size
+test: $(PROJECT)
+	$(BUILDDIR)/$(PROJECT) --title "Title" --body "Body" \
 		--width 200 --height 100 \
 		--xpos  700 --ypos   400 \
 		--time    5 \
-		--opacity 0.5 \ #fix
+		--opacity 0.5 \
 		--margin 40 \
-		--title-size 24 --body-size 16 \ #fix
+		--title-size 24 --body-size 16 \
 		--background "#00a866" --foreground "#ffffff"
