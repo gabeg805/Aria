@@ -15,7 +15,6 @@
 
 /* Includes */
 #include "AriaSharedMem.h"
-#include "AriaUtility.h"
 #include <stdint.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -128,15 +127,15 @@ int AriaSharedMem::memopen(void)
     }
 
     if ( (FD=open(MFILE, FFLAGS, FMODE)) < 0 ) {
-        AriaUtility::errprint("open", errno);
+        // AriaUtility::errprint("open", errno);
         return -1;
     }
     if ( flock(FD, LOCK_EX) < 0 ) {
-        AriaUtility::errprint("flock", errno);
+        // AriaUtility::errprint("flock", errno);
         return -1;
     }
     if ( AriaSharedMem::memmap() < 0 ) {
-        AriaUtility::errprint("memmap: error.");
+        // AriaUtility::errprint("memmap: error.");
         return -1;
     }
     if ( created )
@@ -158,15 +157,15 @@ int AriaSharedMem::memread(struct SharedMemType *r, size_t s)
         return -1;
 
     if ( lseek(FD, 0, SEEK_SET) < 0 ) {
-        AriaUtility::errprint("lseek", errno);
+        // AriaUtility::errprint("lseek", errno);
         return -1;
     }
     if ( read(FD, r, s) < 0 ) {
-        AriaUtility::errprint("read", errno);
+        // AriaUtility::errprint("read", errno);
         return -1;
     }
     if ( lseek(FD, 0, SEEK_SET) < 0 ) {
-        AriaUtility::errprint("lseek", errno);
+        // AriaUtility::errprint("lseek", errno);
         return -1;
     }
     return 0;
@@ -186,15 +185,15 @@ int AriaSharedMem::memwrite(struct SharedMemType *w, size_t s)
         return -1;
 
     if ( lseek(FD, 0, SEEK_SET) < 0 ) {
-        AriaUtility::errprint("lseek", errno);
+        // AriaUtility::errprint("lseek", errno);
         return -1;
     }
     if ( write(FD, w, s) < 0 ) {
-        AriaUtility::errprint("write", errno);
+        // AriaUtility::errprint("write", errno);
         return -1;
     }
     if ( lseek(FD, 0, SEEK_SET) < 0 ) {
-        AriaUtility::errprint("lseek", errno);
+        // AriaUtility::errprint("lseek", errno);
         return -1;
     }
 
@@ -211,10 +210,12 @@ int AriaSharedMem::memwrite(struct SharedMemType *w, size_t s)
  */
 int AriaSharedMem::memclose(void)
 {
-    if ( AriaSharedMem::memwrite(MEM, MSIZE) < 0 )
-        AriaUtility::errprint("memwrite: error.");
-    if ( AriaSharedMem::memunmap() < 0 )
-        AriaUtility::errprint("memunmap: error.");
+    if ( AriaSharedMem::memwrite(MEM, MSIZE) < 0 ) {
+        // AriaUtility::errprint("memwrite: error.");
+    }
+    if ( AriaSharedMem::memunmap() < 0 ) {
+        // AriaUtility::errprint("memunmap: error.");
+    }
     int status = close(FD);
     FD         = -1;
     return status;
@@ -244,7 +245,7 @@ int AriaSharedMem::memmap(void)
 
     MADDR = (long *) mmap(NULL, MSIZE, MPROT, MFLAGS, FD, 0);
     if ( MADDR == MAP_FAILED ) {
-        AriaUtility::errprint("mmap", errno);
+        // AriaUtility::errprint("mmap", errno);
         return -1;
     }
 
@@ -261,7 +262,7 @@ int AriaSharedMem::memunmap(void)
         return -1;
 
     if ( munmap(MADDR, MSIZE) < 0 )
-        AriaUtility::errprint("munmap", errno);
+        // AriaUtility::errprint("munmap", errno);
 
     return 0;
 }

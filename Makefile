@@ -5,7 +5,7 @@ PROJECT = aria
 # ------------------------------------------------------------------------------
 # Compiler settings
 CC      = g++
-CFLAGS  = -g -Wall -std=c++11
+CFLAGS  = -g -Wall -std=c++14
 LIBS    = -lX11 -I $(INCDIR) `pkg-config $(PKGS) --cflags --libs`
 PKGS    = gtkmm-3.0
 

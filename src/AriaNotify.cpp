@@ -1,4 +1,4 @@
-/* *****************************************************************************
+/* -----------------------------------------------------------------------------
  * 
  * Name:    AriaNotify.cc
  * Class:   <AriaNotify>
@@ -10,14 +10,13 @@
  * 
  * Notes: None.
  * 
- * *****************************************************************************
+ * -----------------------------------------------------------------------------
  */
 
 /* Includes */
 #include "AriaNotify.h"
 #include "AriaAttribute.h"
 #include "AriaSharedMem.h"
-#include "AriaUtility.h"
 #include <time.h>
 #include <unistd.h>
 #include <gtkmm.h>
@@ -28,7 +27,7 @@
 #include <iostream>
 #include <string>
 
-/* ************************************************************************** */
+/* -------------------------------------------------------------------------- */
 /**
  * Construct the notification window and container.
  */
@@ -38,7 +37,7 @@ AriaNotify::AriaNotify() :
 {
 }
 
-/* ************************************************************************** */
+/* -------------------------------------------------------------------------- */
 /**
  * @brief Initialize the notification bubble.
  * 
@@ -49,15 +48,15 @@ AriaNotify::AriaNotify() :
 void AriaNotify::init(char **argv)
 {
     int status = AriaAttribute::init(argv);
-    if ( status != 0 ) {
-        AriaUtility::usage();
+    if (status != 0) {
+        //AriaUtility::usage();
         exit(0);
     }
 
     std::string title = AriaAttribute::getstr("title");
     std::string body  = AriaAttribute::getstr("body");
     if ( title.empty() && body.empty() ) {
-        AriaUtility::errprint("No title or body text set.");
+        // AriaUtility::errprint("No title or body text set.");
         exit(1);
     }
 
@@ -73,7 +72,7 @@ void AriaNotify::init(char **argv)
     std::signal(SIGTERM, cleanup);
 }
 
-/* ************************************************************************** */
+/* -------------------------------------------------------------------------- */
 /**
  * @brief Display the notification bubble.
  */
@@ -90,7 +89,7 @@ void AriaNotify::show(void)
     this->set_size();
 }
 
-/* ************************************************************************** */
+/* -------------------------------------------------------------------------- */
 /**
  * @brief Move the notification bubble.
  * 
@@ -115,7 +114,7 @@ void AriaNotify::movepos(void)
     this->move(data.x, data.y);
 }
 
-/* ************************************************************************** */
+/* -------------------------------------------------------------------------- */
 /**
  * @brief Cleanup any memory mapped data.
  * 
@@ -130,7 +129,7 @@ void AriaNotify::cleanup(int sig)
     exit(sig);
 }
 
-/* ************************************************************************** */
+/* -------------------------------------------------------------------------- */
 /**
  * @brief Set the notification bubble title text.
  */
@@ -139,7 +138,7 @@ void AriaNotify::set_title(void)
     set_notify_text("title");
 }
 
-/* ************************************************************************** */
+/* -------------------------------------------------------------------------- */
 /**
  * @brief Set the notification bubble body text.
  */
@@ -148,7 +147,7 @@ void AriaNotify::set_body(void)
     set_notify_text("body");
 }
 
-/* ************************************************************************** */
+/* -------------------------------------------------------------------------- */
 /**
  * @brief General notification text setter.
  * 
@@ -178,7 +177,7 @@ void AriaNotify::set_notify_text(std::string field)
     }
 }
 
-/* ************************************************************************** */
+/* -------------------------------------------------------------------------- */
 /**
  * @brief Set the background color of the notification bubble.
  */
@@ -192,7 +191,7 @@ void AriaNotify::set_background(void)
     this->override_background_color(background, Gtk::STATE_FLAG_NORMAL);
 }
 
-/* ************************************************************************** */
+/* -------------------------------------------------------------------------- */
 /**
  * @brief Set the foreground (text) color of the notification bubble.
  */
@@ -206,7 +205,7 @@ void AriaNotify::set_foreground(void)
     this->override_color(foreground, Gtk::STATE_FLAG_NORMAL);
 }
 
-/* ************************************************************************** */
+/* -------------------------------------------------------------------------- */
 /**
  * @brief Set the margin of the notification bubble text.
  */
@@ -219,7 +218,7 @@ void AriaNotify::set_margin(void)
     bubble.set_margin_end(margin);
 }
 
-/* ************************************************************************** */
+/* -------------------------------------------------------------------------- */
 /**
  * @brief Set the notification bubble size.
  */
@@ -248,7 +247,7 @@ void AriaNotify::set_size(void)
     AriaAttribute::setint("height", height);
 }
 
-/* ************************************************************************** */
+/* -------------------------------------------------------------------------- */
 /**
  * @brief Set the notification bubble timer.
  * 

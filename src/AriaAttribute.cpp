@@ -64,7 +64,7 @@ int AriaAttribute::init(char **argv)
     AriaAttribute::setstr("program", *argv);
     std::string str;
 
-    while ( *++argv != NULL ) {
+    while (*++argv != NULL) {
         str = *argv++;
 
         if ( (str.compare("-h") == 0) || (str.compare("--help") == 0) )
