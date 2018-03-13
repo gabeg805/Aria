@@ -16,6 +16,8 @@
 
 /* Includes */
 #include "commandline.h"
+#include "ariadef.h"
+#include "conf.h"
 #include <algorithm>
 #include <iostream>
 #include <memory>
@@ -28,27 +30,25 @@ namespace commandline
     /**
      * Create instance
      */
-    parser::make_type parser::make(std::string&& scriptname, const options&& opts)
+    parser::make_type parser::init(const options&& opts)
     {
-        return std::make_unique<parser>("Usage: " + scriptname + " [OPTION]...",
-                                       std::forward<decltype(opts)>(opts));
+        return std::make_unique<parser>(std::forward<decltype(opts)>(opts));
     }
 
     /**
      * Construct parser
      */
-    parser::parser(std::string&& synopsis, const options&& opts)
-        : m_synopsis(std::forward<decltype(synopsis)>(synopsis)),
-          m_opts(std::forward<decltype(opts)>(opts))
+    parser::parser(const options&& opts)
+        : m_opts(std::forward<decltype(opts)>(opts))
     {
     }
 
     /**
      * Print application usage message
      */
-    void parser::usage() const
+    void parser::usage(void) const
     {
-        printf("%s\n\n", m_synopsis.c_str());
+        printf("Usage: %s [option]...\n\n", PROGRAM);
 
         // get the length of the longest string in the flag column
         // which is used to align the description fields
@@ -91,88 +91,121 @@ namespace commandline
     }
 
     /**
+     * Process configuration file values
+     */
+    void parser::process_config(void)
+    {
+        std::cout << std::endl;
+
+        for (auto const& pair : m_optvalues) {
+            std::cout << "(" + pair.first + ", " + pair.second + ")" << std::endl;
+        }
+
+        std::cout << std::endl;
+
+        /* Fill in default values not specified */
+        std::vector<std::string> keys = conf_get_keys("Main");
+        std::string value;
+
+        for (std::string k : keys) {
+            if (has_option(k)) {
+                continue;
+            }
+
+            value = conf_read("Main", k.c_str());
+            set_value(k, value);
+            std::cout << "Key : " << k << " | Value : " << value << std::endl;
+        }
+
+        std::cout << std::endl;
+
+
+        for (auto const& pair : m_optvalues) {
+            std::cout << "(" + pair.first + ", " + pair.second + ")" << std::endl;
+        }
+
+        std::cout << std::endl;
+
+    }
+
+    /**
      * Process input values
      */
     void parser::process_input(const std::vector<std::string>& values)
     {
+        bool skip = false;
+        std::string current;
+        std::string next;
+        std::string value;
+
+        /* */
         for (size_t i = 0; i < values.size(); i++) {
+            current = values[i];
+            next = (values.size() > i+1) ? values[i+1] : "";
+
             std::cout << "Value (" + std::to_string(i) + "): " + values[i] << std::endl;
-            parse(values[i], values.size() > i + 1 ? values[i + 1] : "");
+
+            if (skip) {
+                skip = false;
+                if (!next.empty()) {
+                    continue;
+                }
+            }
+
+            /* Set the option that is found */
+            for (auto&& opt : m_opts) {
+                if (is(current, opt.shortflag, opt.longflag)) {
+                    value = set_value(opt, current, next);
+                    skip = (value == next);
+                    break;
+                }
+            }
+
+            /* Unknown option */
+            if (skip || (current[0] != '-')) {
+                continue;
+            }
+            else {
+                std::cout << "Unknown option " + current << std::endl;
+            }
         }
     }
 
     /**
-     * Test if the passed option was provided
+     * Parse option value. No value is present if there is no token
      */
-    bool parser::has(const std::string& option) const
+    std::string parser::parse_value(std::string current, const std::string& next,
+                                    std::string token, choices values)
     {
-        return m_optvalues.find(option) != m_optvalues.end();
-    }
-
-    /**
-     * Get the value defined for given option
-     */
-    std::string parser::get(std::string opt) const
-    {
-        if (has(std::forward<std::string>(opt))) {
-            return m_optvalues.find(opt)->second;
-        }
-        return "";
-    }
-
-    /**
-     * Compare option value with given string
-     */
-    bool parser::compare(std::string opt, const std::string& val) const
-    {
-        return get(move(opt)) == val;
-    }
-
-    /**
-     * Compare option with its short version
-     */
-    bool parser::is_short(const std::string& option, const std::string& opt_short) const
-    {
-        return option.compare(0, opt_short.length(), opt_short) == 0;
-    }
-
-    /**
-     * Compare option with its long version
-     */
-    bool parser::is_long(const std::string& option, const std::string& opt_long) const
-    {
-        return option.compare(0, opt_long.length(), opt_long) == 0;
-    }
-
-    /**
-     * Compare option with both versions
-     */
-    bool parser::is(const std::string& option, std::string opt_short,
-                    std::string opt_long) const
-    {
-        return is_short(option, move(opt_short)) || is_long(option, move(opt_long));
+        return (token.empty()) ? "" : parse_value(current, next, values);
     }
 
     /**
      * Parse option value
      */
-    std::string parser::parse_value(std::string input, const std::string& input_next, choices values) const
+    std::string parser::parse_value(std::string current, const std::string& next,
+                                    choices values)
     {
-        std::string opt = move(input);
+        std::string opt = std::move(current);
         size_t pos;
         std::string value;
 
-        if (input_next.empty() && opt.compare(0, 2, "--") != 0) {
+        /* Determine the value and ensure the argument is not missing */
+        if (next.empty() && opt.compare(0, 2, "--") != 0) {
             std::cout << "Missing argument for option " + opt << std::endl;
-        } else if ((pos = opt.find('=')) == std::string::npos && opt.compare(0, 2, "--") == 0) {
+        }
+        else if ((pos = opt.find('=')) == std::string::npos && opt.compare(0, 2, "--") == 0) {
             std::cout << "Missing argument for option " + opt << std::endl;
-        } else if (pos == std::string::npos && !input_next.empty()) {
-            value = input_next;
-        } else {
+        }
+        else if (pos == std::string::npos && !next.empty()) {
+            value = next;
+        }
+        else {
             value = opt.substr(pos + 1);
             opt = opt.substr(0, pos);
         }
 
+        /* Invalid argument */
         if (!values.empty() && std::find(values.begin(), values.end(), value) == values.end()) {
             std::cout << "Invalid argument for option " + opt << std::endl;
         }
@@ -181,36 +214,67 @@ namespace commandline
     }
 
     /**
-     * Parse and validate passed arguments and flags
+     * Set the value defined for the given option
      */
-    void parser::parse(const std::string& input, const std::string& input_next) {
-        auto skipped = m_skipnext;
-        if (m_skipnext) {
-            m_skipnext = false;
-            if (!input_next.empty()) {
-                return;
-            }
-        }
+    std::string parser::set_value(option opt, std::string current, std::string next)
+    {
+        auto value = parse_value(current, next, opt.values);
+        m_optvalues.insert(std::make_pair(opt.longflag.substr(2), value));
+        return value;
+    }
 
-        for (auto&& opt : m_opts) {
-            if (is(input, opt.shortflag, opt.longflag)) {
-                if (opt.token.empty()) {
-                    m_optvalues.insert(make_pair(opt.longflag.substr(2), ""));
-                } else {
-                    auto value = parse_value(input, input_next, opt.values);
-                    m_skipnext = (value == input_next);
-                    m_optvalues.insert(make_pair(opt.longflag.substr(2), value));
-                }
-                return;
-            }
-        }
+    /**
+     * Set the value defined for the given option
+     */
+    std::string parser::set_value(std::string opt, std::string value)
+    {
+        m_optvalues.insert(std::make_pair(opt, value));
+        return value;
+    }
 
-        if (skipped) {
-            return;
-        } else if (input[0] != '-') {
-            m_posargs.emplace_back(input);
-        } else {
-            std::cout << "Unrecognized option " + input << std::endl;
+    /**
+     * Get the value defined for given option
+     */
+    std::string parser::get_value(std::string opt)
+    {
+        if (has_option(std::forward<std::string>(opt))) {
+            return m_optvalues.find(opt)->second;
         }
+        return "";
+    }
+
+    /**
+     * Test if the passed option was provided
+     */
+    bool parser::has_option(const std::string& option) const
+    {
+        return m_optvalues.find(option) != m_optvalues.end();
+    }
+
+    /**
+     * Compare option with its short version
+     */
+    bool parser::is_short(const std::string& option, const std::string& optshort) const
+    {
+        return option.compare(optshort) == 0;
+        // return option.compare(0, opt_short.length(), opt_short) == 0;
+    }
+
+    /**
+     * Compare option with its long version
+     */
+    bool parser::is_long(const std::string& option, const std::string& optlong) const
+    {
+        return option.compare(optlong) == 0;
+        // return option.compare(0, opt_long.length(), opt_long) == 0;
+    }
+
+    /**
+     * Compare option with both versions
+     */
+    bool parser::is(const std::string& option, std::string optshort,
+                    std::string optlong) const
+    {
+        return is_short(option, move(optshort)) || is_long(option, move(optlong));
     }
 }

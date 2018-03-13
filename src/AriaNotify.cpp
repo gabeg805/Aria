@@ -27,7 +27,6 @@
 #include <iostream>
 #include <string>
 
-/* -------------------------------------------------------------------------- */
 /**
  * Construct the notification window and container.
  */
@@ -35,6 +34,9 @@ AriaNotify::AriaNotify() :
     Gtk::Window(Gtk::WINDOW_POPUP),
     bubble(Gtk::ORIENTATION_VERTICAL)
 {
+    std::signal(SIGINT,  cleanup);
+    std::signal(SIGQUIT, cleanup);
+    std::signal(SIGTERM, cleanup);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -67,9 +69,6 @@ void AriaNotify::init(char **argv)
             exit(1);
     }
 
-    std::signal(SIGINT,  cleanup);
-    std::signal(SIGQUIT, cleanup);
-    std::signal(SIGTERM, cleanup);
 }
 
 /* -------------------------------------------------------------------------- */

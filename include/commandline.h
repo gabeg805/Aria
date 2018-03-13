@@ -28,7 +28,6 @@ namespace commandline
     using choices = std::vector<std::string>;
     using options = std::vector<option>;
     using values = std::map<std::string, std::string>;
-    using posargs = std::vector<std::string>;
 
     class option
     {
@@ -53,32 +52,27 @@ namespace commandline
     {
     public:
         using make_type = std::unique_ptr<parser>;
-        static make_type make(std::string&& scriptname, const options&& opts);
+        static make_type init(const options&& opts);
+        explicit parser(const options&& opts);
 
-        explicit parser(std::string&& synopsis, const options&& opts);
-
-        void usage() const;
-
+        void usage(void) const;
         void process_input(const std::vector<std::string>& values);
-
-        bool has(const std::string& option) const;
-        std::string get(std::string opt) const;
-        bool compare(std::string opt, const std::string& val) const;
+        void process_config(void);
+        std::string get_value(std::string opt);
+        bool has_option(const std::string& opt) const;
 
     protected:
-        bool is_short(const std::string& option, const std::string& opt_short) const;
-        bool is_long(const std::string& option, const std::string& opt_long) const;
-        bool is(const std::string& option, std::string opt_short, std::string opt_long) const;
-
-        std::string parse_value(std::string input, const std::string& input_next, choices values) const;
-        void parse(const std::string& input, const std::string& input_next = "");
+        std::string parse_value(std::string current, const std::string& next, std::string token, choices values);
+        std::string parse_value(std::string current, const std::string& next, choices values);
+        std::string set_value(option opt, std::string current, std::string next);
+        std::string set_value(std::string opt, std::string value);
+        bool is_short(const std::string& opt, const std::string& optshort) const;
+        bool is_long(const std::string& opt, const std::string& optlong) const;
+        bool is(const std::string& opt, std::string optshort, std::string optlong) const;
 
     private:
-        std::string m_synopsis{};
         const options m_opts;
         values m_optvalues{};
-        posargs m_posargs{};
-        bool m_skipnext{false};
     };
 
 }
