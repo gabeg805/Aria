@@ -233,7 +233,7 @@ namespace commandline
     }
 
     /**
-     * Get the value defined for given option
+     * Return the value for an option
      */
     std::string parser::get_value(std::string opt)
     {
@@ -241,6 +241,14 @@ namespace commandline
             return m_optvalues.find(opt)->second;
         }
         return "";
+    }
+
+    /**
+     * Return all options and values
+     */
+    values parser::get_values(void)
+    {
+        return m_optvalues;
     }
 
     /**

@@ -18,6 +18,7 @@
 #define ARIA_CORE_INCLUDE_ARIANOTIFY_H
 
 /* Includes */
+#include "commandline.h"
 #include <gtkmm.h>
 #include <string>
 
@@ -33,22 +34,28 @@ class AriaNotify:
 public:
     AriaNotify();
 
-    void init(char **argv);
-    void show(void);
-    void movepos(void);
+    int build(commandline::values cli);
+    int show(void);
 
 private:
-    void set_title(void);
-    void set_body(void);
-    void set_notify_text(std::string field);
-    void set_background(void);
-    void set_foreground(void);
-    void set_margin(void);
-    void set_size(void);
-    void set_timer(void);
+    int set_title(std::string title, std::string font, std::string size);
+    int set_body(std::string title, std::string font, std::string size);
+    int set_text(std::string title, std::string font, std::string size);
+    int set_background(std::string color);
+    int set_foreground(std::string color);
+    int set_margin(std::string margin);
+    int set_time(std::string time);
+    int set_size(std::string width, std::string height);
+    int set_position(std::string xpos, std::string ypos);
+    int resize(void);
+    int reposition(void);
     static void cleanup(int sig);
 
-    Gtk::Box      bubble;
+    Gtk::Box bubble;
+    std::string m_width;
+    std::string m_height;
+    std::string m_xpos;
+    std::string m_ypos;
 };
 
 #endif /* ARIA_CORE_INCLUDE_ARIANOTIFY_H */

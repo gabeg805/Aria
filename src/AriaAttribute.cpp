@@ -49,66 +49,6 @@ static std::string ATTR[17][2]     = {
 
 /* ************************************************************************** */
 /**
- * @brief Initialize the Aria attribute data structure by populating some user
- *        defined pieces.
- * 
- * @details Essentially a specialized getopt. Loop through the argument vector
- *          searching for user defined pieces and populate the data structure
- *          when a new piece is found. When all user defined pieces are
- *          specified, fill in the remainder with defaults.
- * 
- * @param argv the command line argument vector.
- */
-int AriaAttribute::init(char **argv)
-{
-    AriaAttribute::setstr("program", *argv);
-    std::string str;
-
-    while (*++argv != NULL) {
-        str = *argv++;
-
-        if ( (str.compare("-h") == 0) || (str.compare("--help") == 0) )
-            return -1;
-        else if ( (str.compare("-t") == 0) || (str.compare("--title") == 0) )
-            AriaAttribute::setstr("title", *argv);
-        else if ( (str.compare("-b") == 0) || (str.compare("--body") == 0) )
-            AriaAttribute::setstr("body", *argv);
-        else if ( (str.compare("-f") == 0) || (str.compare("--font") == 0) )
-            AriaAttribute::setstr("font", *argv);
-        else if ( (str.compare("-w") == 0) || (str.compare("--width") == 0) )
-            AriaAttribute::setstr("width", *argv);
-        else if ( (str.compare("-h") == 0) || (str.compare("--height") == 0) )
-            AriaAttribute::setstr("height", *argv);
-        else if ( (str.compare("-x") == 0) || (str.compare("--xpos") == 0) )
-            AriaAttribute::setstr("xpos", *argv);
-        else if ( (str.compare("-y") == 0) || (str.compare("--ypos") == 0) )
-            AriaAttribute::setstr("ypos", *argv);
-        else if ( str.compare("--time") == 0 )
-            AriaAttribute::setstr("timer", *argv);
-        else if ( (str.compare("-o") == 0) || (str.compare("--opacity") == 0) ) 
-            AriaAttribute::setstr("opacity", *argv);
-        else if ( (str.compare("-m") == 0) || (str.compare("--margin") == 0) ) 
-            AriaAttribute::setstr("margin", *argv);
-        else if ( (str.compare("-d") == 0) || (str.compare("--delay") == 0) ) 
-            AriaAttribute::setstr("delay", *argv);
-        else if ( (str.compare("-ts") == 0) || (str.compare("--title-size") == 0) ) 
-            AriaAttribute::setstr("title_size", *argv);
-        else if ( (str.compare("-bs") == 0) || (str.compare("--body-size") == 0) ) 
-            AriaAttribute::setstr("body_size", *argv);
-        else if ( (str.compare("-bg") == 0) || (str.compare("--background") == 0) ) 
-            AriaAttribute::setstr("background", *argv);
-        else if ( (str.compare("-fg") == 0) || (str.compare("--foreground") == 0) ) 
-            AriaAttribute::setstr("foreground", *argv);
-        else
-            continue;
-    }
-
-    AriaAttribute::setdefaults();
-    return 0;
-}
-
-/* ************************************************************************** */
-/**
  * @brief Return the value in the attribute data structure that is pointed to by
  *        the given key.
  * 

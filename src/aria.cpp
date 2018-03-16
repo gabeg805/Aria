@@ -51,11 +51,11 @@ int main(int argc, char** argv)
         commandline::option{"-h", "--help",        "Print program usage."},
         commandline::option{"-t", "--title",       "Title.", "TITLE"},
         commandline::option{"-b", "--body",        "Body text.", "BODY"},
-        commandline::option{"-x", "--xpos",        "X-position on screen.", "POS"},
-        commandline::option{"-y", "--ypos",        "Y-position on screen.", "POS"},
+        commandline::option{"-X", "--xpos",        "X-position on screen.", "POS"},
+        commandline::option{"-Y", "--ypos",        "Y-position on screen.", "POS"},
         commandline::option{"-m", "--margin",      "Margin all around the notification.", "MARGIN"},
-        commandline::option{"-w", "--width",       "Width.", "WIDTH"},
-        commandline::option{"-h", "--height",      "Height.", "HEIGHT"},
+        commandline::option{"-W", "--width",       "Width.", "WIDTH"},
+        commandline::option{"-H", "--height",      "Height.", "HEIGHT"},
         commandline::option{"-o", "--opacity",     "Opacity (0 <= opacity <= 1).", "OPACITY"},
         commandline::option{"-T", "--time",        "Amount of time to display notification.", "TIME"},
         commandline::option{"-f", "--font",        "Font of text to display.", "FONT"},
@@ -65,21 +65,21 @@ int main(int argc, char** argv)
         commandline::option{"-fg", "--foreground", "Foreground color.", "COLOR"}
     };
 
+    /* Process command line arguments */
     commandline::parser::make_type cli{commandline::parser::init(std::move(opts))};
     std::vector<std::string> args{argv + 1, argv + argc};
     cli->process_input(args);
     cli->process_config();
-    cli->usage();
-
-    exit(0);
+    /* Add a check for help */
 
     /* Build notification bubble */
     Glib::RefPtr<Gtk::Application> app = Gtk::Application::create("");
-
     AriaNotify Aria;
-    Aria.init(argv);
+    int status;
+
+    status = Aria.build(cli->get_values());
+    std::cout << "Status : " << status << std::endl;
     Aria.show();
-    Aria.movepos();
 
     return app->run(Aria);
 }

@@ -14,6 +14,10 @@
  * -----------------------------------------------------------------------------
  */
 
+/* Header guard */
+#ifndef ARIA_COMMAND_LINE_H
+#define ARIA_COMMAND_LINE_H
+
 /* Includes */
 #include <map>
 #include <memory>
@@ -51,7 +55,7 @@ namespace commandline
     class parser
     {
     public:
-        using make_type = std::unique_ptr<parser>;
+        using make_type = std::shared_ptr<parser>;
         static make_type init(const options&& opts);
         explicit parser(const options&& opts);
 
@@ -59,6 +63,7 @@ namespace commandline
         void process_input(const std::vector<std::string>& values);
         void process_config(void);
         std::string get_value(std::string opt);
+        values get_values(void);
         bool has_option(const std::string& opt) const;
 
     protected:
@@ -76,3 +81,5 @@ namespace commandline
     };
 
 }
+
+#endif /* ARIA_COMMAND_LINE_H */

@@ -15,8 +15,8 @@
 
 /* Includes */
 #include "AriaNotify.h"
-#include "AriaAttribute.h"
 #include "AriaSharedMem.h"
+#include "commandline.h"
 #include <time.h>
 #include <unistd.h>
 #include <gtkmm.h>
@@ -34,230 +34,255 @@ AriaNotify::AriaNotify() :
     Gtk::Window(Gtk::WINDOW_POPUP),
     bubble(Gtk::ORIENTATION_VERTICAL)
 {
+    this->m_width = "";
+    this->m_height = "";
+    this->m_xpos = "";
+    this->m_ypos = "";
+
     std::signal(SIGINT,  cleanup);
     std::signal(SIGQUIT, cleanup);
     std::signal(SIGTERM, cleanup);
 }
 
-/* -------------------------------------------------------------------------- */
-/**
- * @brief Initialize the notification bubble.
- * 
- * @details Check inputs and set up signal handlers for cleanup.
- * 
- * @param argv the command line argument vector.
- */
-void AriaNotify::init(char **argv)
+
+std::string get_val(commandline::values optvalues, std::string opt)
 {
-    int status = AriaAttribute::init(argv);
-    if (status != 0) {
-        //AriaUtility::usage();
-        exit(0);
+    if (optvalues.find(opt) != optvalues.end()) {
+        return optvalues.find(opt)->second;
     }
-
-    std::string title = AriaAttribute::getstr("title");
-    std::string body  = AriaAttribute::getstr("body");
-    if ( title.empty() && body.empty() ) {
-        // AriaUtility::errprint("No title or body text set.");
-        exit(1);
-    }
-
-    int delay = AriaAttribute::getint("delay");
-    bool stuff = AriaSharedMem::isempty();
-    if ( (delay > 0) && !stuff ) {
-        if ( (time(0)-AriaSharedMem::getlast()->time) < delay )
-            exit(1);
-    }
-
+    return "";
 }
 
-/* -------------------------------------------------------------------------- */
 /**
- * @brief Display the notification bubble.
+ * Build the notification bubble
  */
-void AriaNotify::show(void)
+int AriaNotify::build(commandline::values optvalues)
 {
-    this->set_title();
-    this->set_body();
-    this->set_background();
-    this->set_foreground();
-    this->set_margin();
-    this->set_timer();
+    std::string title = get_val(optvalues, "title");
+    std::string body = get_val(optvalues, "body");
+    std::string font = get_val(optvalues, "font");
+    std::string titlesize = get_val(optvalues, "title-size");
+    std::string bodysize = get_val(optvalues, "body-size");
+    std::string background = get_val(optvalues, "background");
+    std::string foreground = get_val(optvalues, "foreground");
+    std::string opacity = get_val(optvalues, "opacity");
+    std::string margin = get_val(optvalues, "margin");
+    std::string time = get_val(optvalues, "time");
+    std::string width = get_val(optvalues, "width");
+    std::string height = get_val(optvalues, "height");
+    std::string xpos = get_val(optvalues, "xpos");
+    std::string ypos = get_val(optvalues, "ypos");
+
+    if ((this->set_title(title, font, titlesize) < 0)
+        && (this->set_body(body, font, bodysize) < 0))
+    {
+        return 1;
+    }
+    if (this->set_background(background) < 0) {
+        return 2;
+    }
+    if (this->set_foreground(foreground) < 0) {
+        return 3;
+    }
+    if (this->set_margin(margin) < 0) {
+        return 4;
+    }
+    if (this->set_time(time) < 0) {
+        return 5;
+    }
+    if (this->set_size(width, height) < 0) {
+        return 6;
+    }
+    if (this->set_position(xpos, ypos) < 0) {
+        return 7;
+    }
+
+    return 0;
+}
+
+/**
+ * Display the notification bubble and size it accordingly
+ */
+int AriaNotify::show(void)
+{
     this->add(bubble);
     this->show_all_children();
-    this->set_size();
+    this->resize();
+    this->reposition();
+    return 0;
 }
 
-/* -------------------------------------------------------------------------- */
 /**
- * @brief Move the notification bubble.
- * 
- * @details Determine the appropriate location to move the notification
- *          bubble such that there will be no overlap with other
- *          notifications. Stores this position in a shared memory region as
- *          a means of interprocess communication with other Aria
- *          applications.
+ * Set the title
  */
-void AriaNotify::movepos(void)
+int AriaNotify::set_title(std::string title, std::string font, std::string size)
+{
+    return this->set_text(title, font, size);
+}
+
+/**
+ * Set the body
+ */
+int AriaNotify::set_body(std::string body, std::string font, std::string size)
+{
+    return this->set_text(body, font, size);
+}
+
+/**
+ * Set the font family, font size, and text for the given notification field.
+ */
+int AriaNotify::set_text(std::string text, std::string font, std::string size)
+{
+    if (text.empty()) {
+        return -1;
+    }
+    if (font.empty()) {
+        return -2;
+    }
+    if (size.empty()) {
+        return -3;
+    }
+
+    Gtk::Label *label = Gtk::manage(new Gtk::Label());
+    Pango::FontDescription fd;
+
+    fd.set_family(font);
+    fd.set_size(std::stoi(size) * PANGO_SCALE);
+    label->set_text(text);
+    label->override_font(fd);
+    bubble.pack_start(*label, Gtk::PACK_SHRINK);
+    return 0;
+}
+
+/**
+ * Set the background color
+ */
+int AriaNotify::set_background(std::string color)
+{
+    if (color.empty()) {
+        return -1;
+    }
+    if (color[0] != '#') {
+        color.insert(0, 1, '#');
+    }
+
+    Gdk::RGBA background(color);
+    this->override_background_color(background, Gtk::STATE_FLAG_NORMAL);
+    return 0;
+}
+
+/**
+ * Set the foreground color -- this is the font color
+ */
+int AriaNotify::set_foreground(std::string color)
+{
+    if (color.empty()) {
+        return -1;
+    }
+    if (color[0] != '#') {
+        color.insert(0, 1, '#');
+    }
+
+    Gdk::RGBA foreground(color);
+    this->override_color(foreground, Gtk::STATE_FLAG_NORMAL);
+    return 0;
+}
+
+/**
+ * Set the margin
+ */
+int AriaNotify::set_margin(std::string margin)
+{
+    int m = std::stoi(margin);
+    if (m < 0) {
+        return -1;
+    }
+
+    bubble.set_margin_top(m);
+    bubble.set_margin_bottom(m);
+    bubble.set_margin_start(m);
+    bubble.set_margin_end(m);
+    return 0;
+}
+
+/**
+ * Set the time at which afterwards, the notification bubble will close
+ */
+int AriaNotify::set_time(std::string time)
+{
+    int t = std::stoi(time);
+    if (t <= 0) {
+        return -1;
+    }
+
+    Glib::signal_timeout().connect_seconds_once(
+        sigc::bind<int>(sigc::ptr_fun(&cleanup), 0), t);
+    return 0;
+}
+
+/**
+ * Set the notification bubble size
+ */
+int AriaNotify::set_size(std::string width, std::string height)
+{
+    this->m_width = width;
+    this->m_height = height;
+    return 0;
+}
+
+/**
+ * Set the notification bubble position.
+ */
+int AriaNotify::set_position(std::string xpos, std::string ypos)
+{
+    this->m_xpos = std::move(xpos);
+    this->m_ypos = std::move(ypos);
+    return 0;
+}
+
+/**
+ * Resize the notification bubble to the desired width and height
+ */
+int AriaNotify::resize(void)
+{
+    int w = std::stoi(m_width);
+    int h = std::stoi(m_height);
+    int tmp;
+
+    if (m_width.compare("0") == 0) {
+        this->get_size(w, tmp);
+    }
+    if (m_height.compare("0") == 0) {
+        this->get_size(tmp, h);
+    }
+
+    this->set_default_size(w, h);
+    return 0;
+}
+
+/**
+ * Move the notification bubble to the desired position.
+ * To-do: Change 1920 to screen width
+ */
+int AriaNotify::reposition(void)
 {
     struct SharedMemType data = {.id   = getpid(),
                                  .time = time(0),
-                                 .x    = AriaAttribute::getint("xpos"),
-                                 .y    = AriaAttribute::getint("ypos"),
-                                 .w    = AriaAttribute::getint("width"),
-                                 .h    = AriaAttribute::getint("height")
-    };
+                                 .x    = std::stoi(m_xpos),
+                                 .y    = std::stoi(m_ypos),
+                                 .w    = std::stoi(m_width),
+                                 .h    = std::stoi(m_height)};
     AriaSharedMem::add(&data, 10);
-
-    data.x = (AriaAttribute::getint("screen") - data.w) - data.x;
+    data.x = (1920 - data.w) - data.x;
     this->move(data.x, data.y);
+    return 0;
 }
 
-/* -------------------------------------------------------------------------- */
 /**
- * @brief Cleanup any memory mapped data.
- * 
- * @details Shuts down the program after cleaning up stored data. Used as a
- *          static member function due to its status as a signal handler.
- * 
- * @param sig the signal that was raised. Incidentally, also the exit status.
+ * Cleanup any memory mapped data and gracefully shutdown program
  */
 void AriaNotify::cleanup(int sig)
 {
     AriaSharedMem::remove();
     exit(sig);
-}
-
-/* -------------------------------------------------------------------------- */
-/**
- * @brief Set the notification bubble title text.
- */
-void AriaNotify::set_title(void)
-{
-    set_notify_text("title");
-}
-
-/* -------------------------------------------------------------------------- */
-/**
- * @brief Set the notification bubble body text.
- */
-void AriaNotify::set_body(void)
-{
-    set_notify_text("body");
-}
-
-/* -------------------------------------------------------------------------- */
-/**
- * @brief General notification text setter.
- * 
- * @details Set the font family, font size, and text for the given
- *          notification field.
- * 
- * @param field the notification field to setup - either title or body.
- */
-void AriaNotify::set_notify_text(std::string field)
-{
-    if ( !AriaAttribute::getstr(field).empty() ) {
-        Gtk::Label *label     = Gtk::manage(new Gtk::Label());
-        std::string font      = AriaAttribute::getstr("font");
-        std::string font_size = AriaAttribute::getstr(field + "-size");
-        std::string text      = AriaAttribute::getstr(field);
-        Pango::FontDescription fd;
-
-        if ( !font.empty() )
-            fd.set_family(font);
-        if ( !font_size.empty() )
-            fd.set_size(atoi(font_size.c_str()) * PANGO_SCALE);
-        if ( !text.empty() )
-            label->set_text(text);
-
-        label->override_font(fd);
-        bubble.pack_start(*label, Gtk::PACK_SHRINK);
-    }
-}
-
-/* -------------------------------------------------------------------------- */
-/**
- * @brief Set the background color of the notification bubble.
- */
-void AriaNotify::set_background(void)
-{
-    std::string color = AriaAttribute::getstr("background");
-    if ( color.empty() )
-        return;
-
-    Gdk::RGBA background(color);
-    this->override_background_color(background, Gtk::STATE_FLAG_NORMAL);
-}
-
-/* -------------------------------------------------------------------------- */
-/**
- * @brief Set the foreground (text) color of the notification bubble.
- */
-void AriaNotify::set_foreground(void)
-{
-    std::string color = AriaAttribute::getstr("foreground");
-    if ( color.empty() )
-        return;
-
-    Gdk::RGBA foreground(color);
-    this->override_color(foreground, Gtk::STATE_FLAG_NORMAL);
-}
-
-/* -------------------------------------------------------------------------- */
-/**
- * @brief Set the margin of the notification bubble text.
- */
-void AriaNotify::set_margin(void)
-{
-    int margin = atoi(AriaAttribute::getstr("margin").c_str());
-    bubble.set_margin_top(margin);
-    bubble.set_margin_bottom(margin);
-    bubble.set_margin_start(margin);
-    bubble.set_margin_end(margin);
-}
-
-/* -------------------------------------------------------------------------- */
-/**
- * @brief Set the notification bubble size.
- */
-void AriaNotify::set_size(void)
-{
-    /* Width */
-    std::string width_str  = AriaAttribute::getstr("width");
-    int         width;
-    int         tmp;
-    if ( width_str.compare("0") == 0 )
-        this->get_size(width, tmp);
-    else
-        width = atoi(width_str.c_str());
-
-    /* Height */
-    std::string height_str = AriaAttribute::getstr("height");
-    int         height;
-    if ( height_str.compare("0") == 0 )
-        this->get_size(tmp, height);
-    else
-        height = atoi(height_str.c_str());
-
-    /* Size */
-    this->set_default_size(width, height);
-    AriaAttribute::setint("width",  width);
-    AriaAttribute::setint("height", height);
-}
-
-/* -------------------------------------------------------------------------- */
-/**
- * @brief Set the notification bubble timer.
- * 
- * @details Closes the notification bubble after the timeout.
- */
-void AriaNotify::set_timer(void)
-{
-    int timer = atoi(AriaAttribute::getstr("timer").c_str());
-    if ( timer <= 0 )
-        return;
-
-    Glib::signal_timeout().connect_seconds_once(
-        sigc::bind<int>(sigc::ptr_fun(&cleanup), 0), timer);
 }

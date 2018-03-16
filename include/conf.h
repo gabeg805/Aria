@@ -12,6 +12,10 @@
  * -----------------------------------------------------------------------------
  */
 
+/* Header guard */
+#ifndef ARIA_CONF_H
+#define ARIA_CONF_H
+
 /* Includes */
 #include <glib.h>
 #include <string>
@@ -25,3 +29,5 @@ int conf_key_file(GKeyFile** keyfile, const char* configfile);
 std::vector<std::string> conf_get_groups(void);
 std::vector<std::string> conf_get_keys(const char* group);
 int is_key_err(GError **err);
+
+#endif /* ARIA_CONF_H */
