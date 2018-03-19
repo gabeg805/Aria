@@ -25,6 +25,7 @@
 #include <cstdlib>
 #include <csignal>
 #include <iostream>
+#include <sstream>
 #include <string>
 
 /**
@@ -34,16 +35,78 @@ AriaNotify::AriaNotify() :
     Gtk::Window(Gtk::WINDOW_POPUP),
     bubble(Gtk::ORIENTATION_VERTICAL)
 {
-    this->m_width = "";
-    this->m_height = "";
-    this->m_xpos = "";
-    this->m_ypos = "";
+    this->m_background = "";
+    this->m_opacity = "";
+    this->m_width = 0;
+    this->m_height = 0;
+    this->m_xpos = 0;
+    this->m_ypos = 0;
+
+    this->set_decorated(false);
+    this->set_app_paintable(true);
+    this->signal_draw().connect(sigc::mem_fun(*this, &AriaNotify::on_draw));
+    this->signal_screen_changed().connect(sigc::mem_fun(*this, &AriaNotify::on_screen_changed));
+    this->on_screen_changed(get_screen());
 
     std::signal(SIGINT,  cleanup);
     std::signal(SIGQUIT, cleanup);
     std::signal(SIGTERM, cleanup);
 }
 
+bool AriaNotify::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
+{
+    Glib::RefPtr<Gdk::Screen> screen = this->get_screen();
+    double curve = 20;
+    double deg = M_PI / 180.0;
+    double width = this->m_width;
+    double height = this->m_height;
+
+    Gtk::Allocation allocation = get_allocation();
+    if (!this->m_width) {
+        width = 1.0*allocation.get_width();
+    }
+    if (!this->m_height) {
+        height = 1.0*allocation.get_height();
+    }
+
+    int r;
+    int g;
+    int b;
+    std::istringstream(this->m_background.substr(0, 2)) >> std::hex >> r;
+    std::istringstream(this->m_background.substr(2, 2)) >> std::hex >> g;
+    std::istringstream(this->m_background.substr(4, 2)) >> std::hex >> b;
+
+    cr->save();
+    cr->set_line_width(0);
+    cr->begin_new_path();
+    cr->arc(width-curve, curve,        curve, -90*deg,   0*deg);
+    cr->arc(width-curve, height-curve, curve,   0*deg,  90*deg);
+    cr->arc(curve,       height-curve, curve,  90*deg, 180*deg);
+    cr->arc(curve,       curve,        curve, 180*deg, 270*deg);
+    cr->close_path();
+    if (screen->is_composited()) {
+        cr->set_source_rgba(r/255.0, g/255.0, b/255.0, 0.5);
+    } else {
+        cr->set_source_rgb(r/255.0, g/255.0, b/255.0);
+    }
+    cr->fill_preserve();
+    cr->stroke();
+
+    return Gtk::Window::on_draw(cr);
+}
+
+/**
+ * Checks to see if the display supports alpha channels
+ */
+void AriaNotify::on_screen_changed(const Glib::RefPtr<Gdk::Screen>& previous_screen)
+{
+    auto screen = get_screen();
+    auto visual = screen->get_rgba_visual();
+    if (!visual) {
+        std::cout << "Your screen does not support alpha channels!" << std::endl;
+    }
+    gtk_widget_set_visual(GTK_WIDGET(gobj()), visual->gobj());
+}
 
 std::string get_val(commandline::values optvalues, std::string opt)
 {
@@ -87,14 +150,17 @@ int AriaNotify::build(commandline::values optvalues)
     if (this->set_margin(margin) < 0) {
         return 4;
     }
-    if (this->set_time(time) < 0) {
+    if (this->set_opacity(opacity) < 0) {
         return 5;
     }
-    if (this->set_size(width, height) < 0) {
+    if (this->set_time(time) < 0) {
         return 6;
     }
-    if (this->set_position(xpos, ypos) < 0) {
+    if (this->set_size(width, height) < 0) {
         return 7;
+    }
+    if (this->set_position(xpos, ypos) < 0) {
+        return 8;
     }
 
     return 0;
@@ -148,7 +214,27 @@ int AriaNotify::set_text(std::string text, std::string font, std::string size)
 
     fd.set_family(font);
     fd.set_size(std::stoi(size) * PANGO_SCALE);
-    label->set_text(text);
+
+    size_t length = 2;
+    for(size_t i=0; (i = text.find("\\", i)) != std::string::npos; )
+    {
+        text.replace(i, length, "\n");
+        i += length;
+    }
+
+    // void find_and_replace(string& source, string const& find, string const& replace)
+    // {
+    //     for(string::size_type i = 0; (i = source.find(find, i)) != string::npos;)
+    //     {
+    //         source.replace(i, find.length(), replace);
+    //         i += replace.length();
+    //     }
+    // }
+    std::cout << "Text : " << text << std::endl;
+
+    label->set_use_markup(true);
+    label->set_markup(text);
+    label->set_line_wrap();
     label->override_font(fd);
     bubble.pack_start(*label, Gtk::PACK_SHRINK);
     return 0;
@@ -159,6 +245,7 @@ int AriaNotify::set_text(std::string text, std::string font, std::string size)
  */
 int AriaNotify::set_background(std::string color)
 {
+    this->m_background = color;
     if (color.empty()) {
         return -1;
     }
@@ -206,6 +293,19 @@ int AriaNotify::set_margin(std::string margin)
 }
 
 /**
+ * Set opacity of window
+ */
+int AriaNotify::set_opacity(std::string opacity)
+{
+    this->m_opacity = opacity;
+    if (opacity.empty()) {
+        return -1;
+    }
+    // Gtk::Window::set_opacity(std::stod(opacity));
+    return 0;
+}
+
+/**
  * Set the time at which afterwards, the notification bubble will close
  */
 int AriaNotify::set_time(std::string time)
@@ -225,8 +325,12 @@ int AriaNotify::set_time(std::string time)
  */
 int AriaNotify::set_size(std::string width, std::string height)
 {
-    this->m_width = width;
-    this->m_height = height;
+    if (!width.empty()) {
+        this->m_width = std::stoi(width);
+    }
+    if (!height.empty()) {
+        this->m_height = std::stoi(height);
+    }
     return 0;
 }
 
@@ -235,8 +339,12 @@ int AriaNotify::set_size(std::string width, std::string height)
  */
 int AriaNotify::set_position(std::string xpos, std::string ypos)
 {
-    this->m_xpos = std::move(xpos);
-    this->m_ypos = std::move(ypos);
+    if (!xpos.empty()) {
+        this->m_xpos = std::stoi(xpos);
+    }
+    if (!ypos.empty()) {
+        this->m_ypos = std::stoi(ypos);
+    }
     return 0;
 }
 
@@ -245,18 +353,20 @@ int AriaNotify::set_position(std::string xpos, std::string ypos)
  */
 int AriaNotify::resize(void)
 {
-    int w = std::stoi(m_width);
-    int h = std::stoi(m_height);
+    int w = this->m_width;
+    int h = this->m_height;
     int tmp;
 
-    if (m_width.compare("0") == 0) {
+    if (!this->m_width) {
         this->get_size(w, tmp);
     }
-    if (m_height.compare("0") == 0) {
+    if (!this->m_height) {
         this->get_size(tmp, h);
     }
 
     this->set_default_size(w, h);
+    this->m_width = w;
+    this->m_height = h;
     return 0;
 }
 
@@ -268,10 +378,10 @@ int AriaNotify::reposition(void)
 {
     struct SharedMemType data = {.id   = getpid(),
                                  .time = time(0),
-                                 .x    = std::stoi(m_xpos),
-                                 .y    = std::stoi(m_ypos),
-                                 .w    = std::stoi(m_width),
-                                 .h    = std::stoi(m_height)};
+                                 .x    = this->m_xpos,
+                                 .y    = this->m_ypos,
+                                 .w    = this->m_width,
+                                 .h    = this->m_height};
     AriaSharedMem::add(&data, 10);
     data.x = (1920 - data.w) - data.x;
     this->move(data.x, data.y);

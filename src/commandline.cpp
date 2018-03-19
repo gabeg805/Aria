@@ -95,14 +95,6 @@ namespace commandline
      */
     void parser::process_config(void)
     {
-        std::cout << std::endl;
-
-        for (auto const& pair : m_optvalues) {
-            std::cout << "(" + pair.first + ", " + pair.second + ")" << std::endl;
-        }
-
-        std::cout << std::endl;
-
         /* Fill in default values not specified */
         std::vector<std::string> keys = conf_get_keys("Main");
         std::string value;
@@ -114,18 +106,7 @@ namespace commandline
 
             value = conf_read("Main", k.c_str());
             set_value(k, value);
-            std::cout << "Key : " << k << " | Value : " << value << std::endl;
         }
-
-        std::cout << std::endl;
-
-
-        for (auto const& pair : m_optvalues) {
-            std::cout << "(" + pair.first + ", " + pair.second + ")" << std::endl;
-        }
-
-        std::cout << std::endl;
-
     }
 
     /**
@@ -142,8 +123,6 @@ namespace commandline
         for (size_t i = 0; i < values.size(); i++) {
             current = values[i];
             next = (values.size() > i+1) ? values[i+1] : "";
-
-            std::cout << "Value (" + std::to_string(i) + "): " + values[i] << std::endl;
 
             if (skip) {
                 skip = false;

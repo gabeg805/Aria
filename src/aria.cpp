@@ -71,14 +71,13 @@ int main(int argc, char** argv)
     cli->process_input(args);
     cli->process_config();
     /* Add a check for help */
+    /* Long options not working */
 
     /* Build notification bubble */
     Glib::RefPtr<Gtk::Application> app = Gtk::Application::create("");
     AriaNotify Aria;
-    int status;
 
-    status = Aria.build(cli->get_values());
-    std::cout << "Status : " << status << std::endl;
+    Aria.build(cli->get_values());
     Aria.show();
 
     return app->run(Aria);
