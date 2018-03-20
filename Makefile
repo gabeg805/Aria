@@ -3,45 +3,50 @@
 PROJECT = aria
 
 # ------------------------------------------------------------------------------
-# Compiler settings
-CC      = g++
-CFLAGS  = -g -Wall -std=c++14
-LIBS    = -lX11 -I $(INCDIR) `pkg-config $(PKGS) --cflags --libs`
-PKGS    = gtkmm-3.0
-
-# ------------------------------------------------------------------------------
 # Directories
 BUILDDIR = .
 SRCDIR   = $(BUILDDIR)/src
 OBJDIR   = $(BUILDDIR)/obj
 INCDIR   = $(BUILDDIR)/include
 DOCDIR   = $(BUILDDIR)/doc
+ETCDIR   = $(BUILDDIR)/etc
+SHAREDIR = $(HOME)/.local/share/$(PROJECT)
+
+# ------------------------------------------------------------------------------
+# Compiler settings
+CC      = g++
+CPPFLAGS  = -g -Wall -std=c++14 $(DEFINES)
+LIBS    = -lX11 -I $(INCDIR) `pkg-config $(PKGS) --cflags --libs`
+PKGS    = gtkmm-3.0
+DEFINES = -DARIA_CONFIG_FILE="\"$(SHAREDIR)/$(PROJECT).conf\""
 
 # ------------------------------------------------------------------------------
 # Files
 SRC    = $(wildcard $(SRCDIR)/*.cpp)
 OBJ    = $(SRC:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o)
 DOC    = $(DOCDIR)/doxy.conf
-MEMMAP = /tmp/ariamap
+MEMMAP = /tmp/$(PROJECT)map
 
 # ------------------------------------------------------------------------------
 # Default target
 all: $(PROJECT)
 
-install: all
-
 # Compile targets
 $(PROJECT): $(OBJ)
-	$(CC) $(CFLAGS) $(LIBS) \
+	$(CC) $(CPPFLAGS) $(LIBS) \
 		-o $(PROJECT) $(OBJ)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
-	$(CC) $(CFLAGS) $(LIBS) \
+	$(CC) $(CPPFLAGS) $(LIBS) \
 		-o $@ \
 		-c $<
 
 # Phony targets
-.PHONY: clean doc test
+.PHONY: install clean doc test
+install: all
+	@mkdir -pv $(SHAREDIR)
+	@cp -av $(ETCDIR)/$(PROJECT).conf $(SHAREDIR)/
+
 clean : 
 	@rm -v -f $(PROJECT)
 	@rm -v -f $(OBJ)

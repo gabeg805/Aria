@@ -14,4 +14,8 @@
 
 /* Defines */
 #define PROGRAM "aria"
+#define ARIA_NAMESPACE \
+    namespace aria {
+#define ARIA_NAMESPACE_END \
+    }
 #define EXIT_TEXT_ERR

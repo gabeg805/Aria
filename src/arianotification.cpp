@@ -1,7 +1,7 @@
 /* -----------------------------------------------------------------------------
  * 
- * Name:    AriaNotify.cc
- * Class:   <AriaNotify>
+ * Name:    arianotification.cpp
+ * Class:   <notification>
  * Author:  Gabriel Gonzalez
  * Email:   gabeg@bu.edu
  * License: The MIT License (MIT)
@@ -14,13 +14,13 @@
  */
 
 /* Includes */
-#include "AriaNotify.h"
+#include "arianotification.h"
 #include "AriaSharedMem.h"
-#include "commandline.h"
-#include <time.h>
-#include <unistd.h>
+#include "ariacommandline.h"
 #include <gtkmm.h>
 #include <gdkmm.h>
+#include <time.h>
+#include <unistd.h>
 #include <pangomm/fontdescription.h>
 #include <cstdlib>
 #include <csignal>
@@ -28,10 +28,12 @@
 #include <sstream>
 #include <string>
 
+ARIA_NAMESPACE
+
 /**
  * Construct the notification window and container.
  */
-AriaNotify::AriaNotify() :
+notification::notification() :
     Gtk::Window(Gtk::WINDOW_POPUP),
     bubble(Gtk::ORIENTATION_VERTICAL)
 {
@@ -44,8 +46,8 @@ AriaNotify::AriaNotify() :
 
     this->set_decorated(false);
     this->set_app_paintable(true);
-    this->signal_draw().connect(sigc::mem_fun(*this, &AriaNotify::on_draw));
-    this->signal_screen_changed().connect(sigc::mem_fun(*this, &AriaNotify::on_screen_changed));
+    this->signal_draw().connect(sigc::mem_fun(*this, &notification::on_draw));
+    this->signal_screen_changed().connect(sigc::mem_fun(*this, &notification::on_screen_changed));
     this->on_screen_changed(get_screen());
 
     std::signal(SIGINT,  cleanup);
@@ -53,7 +55,7 @@ AriaNotify::AriaNotify() :
     std::signal(SIGTERM, cleanup);
 }
 
-bool AriaNotify::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
+bool notification::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 {
     Glib::RefPtr<Gdk::Screen> screen = this->get_screen();
     double curve = 20;
@@ -98,7 +100,7 @@ bool AriaNotify::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 /**
  * Checks to see if the display supports alpha channels
  */
-void AriaNotify::on_screen_changed(const Glib::RefPtr<Gdk::Screen>& previous_screen)
+void notification::on_screen_changed(const Glib::RefPtr<Gdk::Screen>& previous_screen)
 {
     auto screen = get_screen();
     auto visual = screen->get_rgba_visual();
@@ -119,7 +121,7 @@ std::string get_val(commandline::values optvalues, std::string opt)
 /**
  * Build the notification bubble
  */
-int AriaNotify::build(commandline::values optvalues)
+int notification::build(commandline::values optvalues)
 {
     std::string title = get_val(optvalues, "title");
     std::string body = get_val(optvalues, "body");
@@ -169,7 +171,7 @@ int AriaNotify::build(commandline::values optvalues)
 /**
  * Display the notification bubble and size it accordingly
  */
-int AriaNotify::show(void)
+int notification::show(void)
 {
     this->add(bubble);
     this->show_all_children();
@@ -181,7 +183,7 @@ int AriaNotify::show(void)
 /**
  * Set the title
  */
-int AriaNotify::set_title(std::string title, std::string font, std::string size)
+int notification::set_title(std::string title, std::string font, std::string size)
 {
     return this->set_text(title, font, size);
 }
@@ -189,7 +191,7 @@ int AriaNotify::set_title(std::string title, std::string font, std::string size)
 /**
  * Set the body
  */
-int AriaNotify::set_body(std::string body, std::string font, std::string size)
+int notification::set_body(std::string body, std::string font, std::string size)
 {
     return this->set_text(body, font, size);
 }
@@ -197,7 +199,7 @@ int AriaNotify::set_body(std::string body, std::string font, std::string size)
 /**
  * Set the font family, font size, and text for the given notification field.
  */
-int AriaNotify::set_text(std::string text, std::string font, std::string size)
+int notification::set_text(std::string text, std::string font, std::string size)
 {
     if (text.empty()) {
         return -1;
@@ -243,7 +245,7 @@ int AriaNotify::set_text(std::string text, std::string font, std::string size)
 /**
  * Set the background color
  */
-int AriaNotify::set_background(std::string color)
+int notification::set_background(std::string color)
 {
     this->m_background = color;
     if (color.empty()) {
@@ -261,7 +263,7 @@ int AriaNotify::set_background(std::string color)
 /**
  * Set the foreground color -- this is the font color
  */
-int AriaNotify::set_foreground(std::string color)
+int notification::set_foreground(std::string color)
 {
     if (color.empty()) {
         return -1;
@@ -278,7 +280,7 @@ int AriaNotify::set_foreground(std::string color)
 /**
  * Set the margin
  */
-int AriaNotify::set_margin(std::string margin)
+int notification::set_margin(std::string margin)
 {
     int m = std::stoi(margin);
     if (m < 0) {
@@ -295,7 +297,7 @@ int AriaNotify::set_margin(std::string margin)
 /**
  * Set opacity of window
  */
-int AriaNotify::set_opacity(std::string opacity)
+int notification::set_opacity(std::string opacity)
 {
     this->m_opacity = opacity;
     if (opacity.empty()) {
@@ -308,7 +310,7 @@ int AriaNotify::set_opacity(std::string opacity)
 /**
  * Set the time at which afterwards, the notification bubble will close
  */
-int AriaNotify::set_time(std::string time)
+int notification::set_time(std::string time)
 {
     int t = std::stoi(time);
     if (t <= 0) {
@@ -323,7 +325,7 @@ int AriaNotify::set_time(std::string time)
 /**
  * Set the notification bubble size
  */
-int AriaNotify::set_size(std::string width, std::string height)
+int notification::set_size(std::string width, std::string height)
 {
     if (!width.empty()) {
         this->m_width = std::stoi(width);
@@ -337,7 +339,7 @@ int AriaNotify::set_size(std::string width, std::string height)
 /**
  * Set the notification bubble position.
  */
-int AriaNotify::set_position(std::string xpos, std::string ypos)
+int notification::set_position(std::string xpos, std::string ypos)
 {
     if (!xpos.empty()) {
         this->m_xpos = std::stoi(xpos);
@@ -351,7 +353,7 @@ int AriaNotify::set_position(std::string xpos, std::string ypos)
 /**
  * Resize the notification bubble to the desired width and height
  */
-int AriaNotify::resize(void)
+int notification::resize(void)
 {
     int w = this->m_width;
     int h = this->m_height;
@@ -374,7 +376,7 @@ int AriaNotify::resize(void)
  * Move the notification bubble to the desired position.
  * To-do: Change 1920 to screen width
  */
-int AriaNotify::reposition(void)
+int notification::reposition(void)
 {
     struct SharedMemType data = {.id   = getpid(),
                                  .time = time(0),
@@ -391,8 +393,10 @@ int AriaNotify::reposition(void)
 /**
  * Cleanup any memory mapped data and gracefully shutdown program
  */
-void AriaNotify::cleanup(int sig)
+void notification::cleanup(int sig)
 {
     AriaSharedMem::remove();
     exit(sig);
 }
+
+ARIA_NAMESPACE_END

@@ -19,11 +19,14 @@
 #define ARIA_COMMAND_LINE_H
 
 /* Includes */
+#include "ariadef.h"
 #include <map>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
+
+ARIA_NAMESPACE
 
 namespace commandline
 {
@@ -81,5 +84,7 @@ namespace commandline
     };
 
 }
+
+ARIA_NAMESPACE_END
 
 #endif /* ARIA_COMMAND_LINE_H */

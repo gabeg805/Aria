@@ -34,14 +34,16 @@
  */
 
 /* Includes */
-#include "AriaNotify.h"
-#include "commandline.h"
+#include "arianotification.h"
+#include "ariacommandline.h"
 #include <gtkmm.h>
 
 #include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
+
+using namespace aria;
 
 /* Create and display the Aria statusbar */
 int main(int argc, char** argv)
@@ -75,7 +77,7 @@ int main(int argc, char** argv)
 
     /* Build notification bubble */
     Glib::RefPtr<Gtk::Application> app = Gtk::Application::create("");
-    AriaNotify Aria;
+    aria::notification Aria;
 
     Aria.build(cli->get_values());
     Aria.show();

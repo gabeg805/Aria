@@ -1,13 +1,14 @@
 /* -----------------------------------------------------------------------------
  * 
- * Name:    commandline.h
+ * Name:    ariacommandline.h
+ * Class:   <commandline>
  * Author:  Gabriel Gonzalez
  * Email:   gabeg@bu.edu
  * License: The MIT License (MIT)
  * 
  * Syntax: None
  * 
- * Description: Stuff
+ * Description: Command line parser.
  * 
  * Notes: None
  * 
@@ -15,16 +16,17 @@
  */
 
 /* Includes */
-#include "commandline.h"
+#include "ariacommandline.h"
 #include "ariadef.h"
-#include "conf.h"
+#include "ariaconf.h"
 #include <algorithm>
 #include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
 
-/* Namespace */
+ARIA_NAMESPACE
+
 namespace commandline
 {
     /**
@@ -91,25 +93,6 @@ namespace commandline
     }
 
     /**
-     * Process configuration file values
-     */
-    void parser::process_config(void)
-    {
-        /* Fill in default values not specified */
-        std::vector<std::string> keys = conf_get_keys("Main");
-        std::string value;
-
-        for (std::string k : keys) {
-            if (has_option(k)) {
-                continue;
-            }
-
-            value = conf_read("Main", k.c_str());
-            set_value(k, value);
-        }
-    }
-
-    /**
      * Process input values
      */
     void parser::process_input(const std::vector<std::string>& values)
@@ -123,6 +106,11 @@ namespace commandline
         for (size_t i = 0; i < values.size(); i++) {
             current = values[i];
             next = (values.size() > i+1) ? values[i+1] : "";
+
+            if (!current.compare("-h") || !current.compare("--help")) {
+                parser::usage();
+                exit(0);
+            }
 
             if (skip) {
                 skip = false;
@@ -147,6 +135,25 @@ namespace commandline
             else {
                 std::cout << "Unknown option " + current << std::endl;
             }
+        }
+    }
+
+    /**
+     * Process configuration file values
+     */
+    void parser::process_config(void)
+    {
+        /* Fill in default values not specified */
+        std::vector<std::string> keys = aria::config::get_keys("Main");
+        std::string value;
+
+        for (std::string k : keys) {
+            if (has_option(k)) {
+                continue;
+            }
+
+            value = aria::config::read("Main", k.c_str());
+            set_value(k, value);
         }
     }
 
@@ -197,7 +204,7 @@ namespace commandline
      */
     std::string parser::set_value(option opt, std::string current, std::string next)
     {
-        auto value = parse_value(current, next, opt.values);
+        auto value = parse_value(current, next, opt.token, opt.values);
         m_optvalues.insert(std::make_pair(opt.longflag.substr(2), value));
         return value;
     }
@@ -243,8 +250,8 @@ namespace commandline
      */
     bool parser::is_short(const std::string& option, const std::string& optshort) const
     {
-        return option.compare(optshort) == 0;
-        // return option.compare(0, opt_short.length(), opt_short) == 0;
+        // return option.compare(optshort) == 0;
+        return option.compare(0, optshort.length(), optshort) == 0;
     }
 
     /**
@@ -252,8 +259,8 @@ namespace commandline
      */
     bool parser::is_long(const std::string& option, const std::string& optlong) const
     {
-        return option.compare(optlong) == 0;
-        // return option.compare(0, opt_long.length(), opt_long) == 0;
+        // return option.compare(optlong) == 0;
+        return option.compare(0, optlong.length(), optlong) == 0;
     }
 
     /**
@@ -265,3 +272,5 @@ namespace commandline
         return is_short(option, move(optshort)) || is_long(option, move(optlong));
     }
 }
+
+ARIA_NAMESPACE_END

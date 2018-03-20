@@ -1,7 +1,7 @@
 /* *****************************************************************************
  * 
- * Name:    AriaNotify.h
- * Class:   <AriaNotify>
+ * Name:    arianotification.h
+ * Class:   <arianotification>
  * Author:  Gabriel Gonzalez
  * Email:   gabeg@bu.edu
  * License: The MIT License (MIT)
@@ -14,25 +14,24 @@
  */
 
 /* Header guard */
-#ifndef ARIA_CORE_INCLUDE_ARIANOTIFY_H
-#define ARIA_CORE_INCLUDE_ARIANOTIFY_H
+#ifndef ARIA_NOTIFICATION_HPP
+#define ARIA_NOTIFICATION_HPP
 
 /* Includes */
-#include "commandline.h"
+#include "ariadef.h"
+#include "ariacommandline.h"
 #include <gtkmm.h>
 #include <string>
 
+ARIA_NAMESPACE
+
 /**
- * @brief Aria notification bubble object.
- * 
- * @details Handles the initialization, creation, and displaying of the
- *          notification bubble.
+ * Aria notification bubble object.
  */
-class AriaNotify:
-    public Gtk::Window
+class notification: public Gtk::Window
 {
 public:
-    AriaNotify();
+    notification();
 
     int build(commandline::values cli);
     int show(void);
@@ -65,4 +64,6 @@ private:
     int m_ypos;
 };
 
-#endif /* ARIA_CORE_INCLUDE_ARIANOTIFY_H */
+ARIA_NAMESPACE_END
+
+#endif /* ARIA_NOTIFICATION_HPP */
