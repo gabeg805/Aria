@@ -30,6 +30,20 @@ ARIA_NAMESPACE
 
 namespace commandline
 {
+    // /**
+    //  * Find option in option list
+    //  */
+    // option_t optlist_t::find(std::string opt)
+    // {
+    //     option_t o;
+    //     for (option_t option : list) {
+    //         std::cout << option.longopt << std::endl;
+    //         o = option;
+    //     }
+    //     return o;
+    // }
+
+
     interface::interface(const optlist_t options) : m_options(options)
     {
     }
@@ -61,6 +75,15 @@ namespace commandline
      */
     void interface::parse(char** argv)
     {
+        char** a = argv+1;
+        int listflag = 0;
+
+        for ( ; *a != NULL; a++) {
+            if (this->has(*a)) {
+                ;
+            }
+            printf("~%s~\n", *a);
+        }
         return;
     }
 
@@ -77,8 +100,21 @@ namespace commandline
      */
     bool interface::has(std::string opt)
     {
+        return (std::find(this->m_options.start(), this->m_options.end(), opt) != this->m_options.end());
         return false;
     }
+
+    /**
+     * Find option in vector
+     */
+    option_t interface::find(std::string opt)
+    {
+        for (option_t option : this->m_options) {
+            if ((option.shortopt == opt) || (option.longopt == opt)) {
+                return option;
+            }
+        }
+        return 
 }
 
 // namespace commandline

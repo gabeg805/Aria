@@ -49,7 +49,7 @@ using namespace aria;
 int main(int argc, char** argv)
 {
     /* Command line options */
-    const commandline::optlist_t options{
+    commandline::optlist_t options{
         {"-h", "--help", "", commandline::no_argument,
                 "Print program usage."},
         {"-t", "--title", "title", commandline::required_argument,
@@ -80,7 +80,7 @@ int main(int argc, char** argv)
                 "Background color. [Default: 0xffa5d0]"},
         {"-fg", "--foreground", "color", commandline::required_argument,
                 "Foreground color. [Default: 0xffffff]"}
-    };
+        };
 
     /* Process command line arguments */
     // commandline::parser::make_type cli{commandline::parser::init(std::move(opts))};
@@ -91,7 +91,7 @@ int main(int argc, char** argv)
     // /* Long options not working */
 
     commandline::interface* cli = new commandline::interface(options);
-    cli->usage();
+    // cli->usage();
     cli->parse(argv);
 
     return 0;
