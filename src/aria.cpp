@@ -49,38 +49,59 @@ using namespace aria;
 int main(int argc, char** argv)
 {
     /* Command line options */
-    const commandline::options opts{
-        commandline::option{"-h", "--help",        "Print program usage."},
-        commandline::option{"-t", "--title",       "Title.", "TITLE"},
-        commandline::option{"-b", "--body",        "Body text.", "BODY"},
-        commandline::option{"-X", "--xpos",        "X-position on screen.", "POS"},
-        commandline::option{"-Y", "--ypos",        "Y-position on screen.", "POS"},
-        commandline::option{"-m", "--margin",      "Margin all around the notification.", "MARGIN"},
-        commandline::option{"-W", "--width",       "Width.", "WIDTH"},
-        commandline::option{"-H", "--height",      "Height.", "HEIGHT"},
-        commandline::option{"-o", "--opacity",     "Opacity (0 <= opacity <= 1).", "OPACITY"},
-        commandline::option{"-T", "--time",        "Amount of time to display notification.", "TIME"},
-        commandline::option{"-f", "--font",        "Font of text to display.", "FONT"},
-        commandline::option{"-ts", "--title-size", "Size of title text.", "SIZE"},
-        commandline::option{"-bs", "--body-size",  "Size of body text.", "SIZE"},
-        commandline::option{"-bg", "--background", "Background color.", "COLOR"},
-        commandline::option{"-fg", "--foreground", "Foreground color.", "COLOR"}
+    const commandline::optlist_t options{
+        {"-h", "--help", "", commandline::no_argument,
+                "Print program usage."},
+        {"-t", "--title", "title", commandline::required_argument,
+                "Title of the notification."},
+        {"-b", "--body", "body", commandline::required_argument,
+                "Body of the notification."},
+        {"-X", "--xpos", "pos", commandline::required_argument,
+                "X-coordinate of where to put the notification on the screen."},
+        {"-Y", "--ypos", "pos", commandline::required_argument,
+                "Y-coordinate of where to put the notification on the screen."},
+        {"-m", "--margin","margin", commandline::required_argument,
+                "Margin all around the notification."},
+        {"-W", "--width", "width", commandline::required_argument,
+                "Width of the notification."},
+        {"-H", "--height", "height", commandline::required_argument,
+                "Height of the notification."},
+        {"-o", "--opacity", "opacity", commandline::required_argument,
+                "Opacity of the notification. [Default: 0.5]"},
+        {"-T", "--time", "time", commandline::required_argument,
+                "Amount of time to display the notification. [Default: 2s]"},
+        {"-f", "--font", "font", commandline::required_argument,
+                "Font to display text in. [Default: Dejavu Sans]"},
+        {"-ts", "--title-size", "size", commandline::required_argument,
+                "Size of title text. [Default: 16]"},
+        {"-bs", "--body-size", "size", commandline::required_argument,
+                "Size of body text. [Default: 12]"},
+        {"-bg", "--background", "color", commandline::required_argument,
+                "Background color. [Default: 0xffa5d0]"},
+        {"-fg", "--foreground", "color", commandline::required_argument,
+                "Foreground color. [Default: 0xffffff]"}
     };
 
     /* Process command line arguments */
-    commandline::parser::make_type cli{commandline::parser::init(std::move(opts))};
-    std::vector<std::string> args{argv + 1, argv + argc};
-    cli->process_input(args);
-    cli->process_config();
-    /* Add a check for help */
-    /* Long options not working */
+    // commandline::parser::make_type cli{commandline::parser::init(std::move(opts))};
+    // std::vector<std::string> args{argv + 1, argv + argc};
+    // cli->process_input(args);
+    // cli->process_config();
+    // /* Add a check for help */
+    // /* Long options not working */
+
+    commandline::interface* cli = new commandline::interface(options);
+    cli->usage();
+    cli->parse(argv);
+
+    return 0;
 
     /* Build notification bubble */
-    Glib::RefPtr<Gtk::Application> app = Gtk::Application::create("");
-    aria::notification Aria;
+    // Glib::RefPtr<Gtk::Application> app = Gtk::Application::create("");
+    // aria::notification Aria;
 
-    Aria.build(cli->get_values());
-    Aria.show();
+    // Aria.build(cli->get_values());
+    // Aria.show();
 
-    return app->run(Aria);
+    // return app->run(Aria);
 }

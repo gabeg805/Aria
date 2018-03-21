@@ -30,58 +30,92 @@ ARIA_NAMESPACE
 
 namespace commandline
 {
-
-    class option;
-    using choices = std::vector<std::string>;
-    using options = std::vector<option>;
-    using values = std::map<std::string, std::string>;
-
-    class option
+    enum argument_t
     {
-    public:
-        std::string shortflag;
-        std::string longflag;
-        std::string desc;
-        std::string token;
-        const choices values;
-
-        explicit option(std::string&& shortflag, std::string&& longflag,
-                        std::string&& desc, std::string&& token = "",
-                        const choices&& c = {})
-            : shortflag(std::forward<std::string>(shortflag))
-            , longflag(std::forward<std::string>(longflag))
-            , desc(std::forward<std::string>(desc))
-            , token(std::forward<std::string>(token))
-            , values(std::forward<const choices>(c)) {}
+        no_argument,
+        required_argument,
+        optional_argument,
+        list_argument
     };
 
-    class parser
+    typedef struct option
+    {
+        std::string shortopt;
+        std::string longopt;
+        std::string name;
+        argument_t  argument;
+        std::string desc;
+    } option_t;
+
+    typedef std::vector<option_t> optlist_t;
+    typedef std::map<std::string, std::string> values;
+    typedef std::map<std::string, std::string> keyval_t;
+
+    class interface
     {
     public:
-        using make_type = std::shared_ptr<parser>;
-        static make_type init(const options&& opts);
-        explicit parser(const options&& opts);
+        explicit interface(const optlist_t options);
 
-        void usage(void) const;
-        void process_input(const std::vector<std::string>& values);
-        void process_config(void);
-        std::string get_value(std::string opt);
-        values get_values(void);
-        bool has_option(const std::string& opt) const;
-
-    protected:
-        std::string parse_value(std::string current, const std::string& next, std::string token, choices values);
-        std::string parse_value(std::string current, const std::string& next, choices values);
-        std::string set_value(option opt, std::string current, std::string next);
-        std::string set_value(std::string opt, std::string value);
-        bool is_short(const std::string& opt, const std::string& optshort) const;
-        bool is_long(const std::string& opt, const std::string& optlong) const;
-        bool is(const std::string& opt, std::string optshort, std::string optlong) const;
+        void usage(void);
+        void parse(char** argv);
+        std::string get(std::string opt);
+        bool has(std::string opt);
 
     private:
-        const options m_opts;
-        values m_optvalues{};
+        const optlist_t m_options;
     };
+
+    // class option;
+    // using choices = std::vector<std::string>;
+    // using options = std::vector<option>;
+    // using values = std::map<std::string, std::string>;
+
+    // class option
+    // {
+    // public:
+    //     std::string shortflag;
+    //     std::string longflag;
+    //     std::string desc;
+    //     std::string token;
+    //     const choices values;
+
+    //     explicit option(std::string&& shortflag, std::string&& longflag,
+    //                     std::string&& desc, std::string&& token = "",
+    //                     const choices&& c = {})
+    //         : shortflag(std::forward<std::string>(shortflag))
+    //         , longflag(std::forward<std::string>(longflag))
+    //         , desc(std::forward<std::string>(desc))
+    //         , token(std::forward<std::string>(token))
+    //         , values(std::forward<const choices>(c)) {}
+    // };
+
+    // class parser
+    // {
+    // public:
+    //     using make_type = std::shared_ptr<parser>;
+    //     static make_type init(const options&& opts);
+    //     explicit parser(const options&& opts);
+
+    //     void usage(void) const;
+    //     void process_input(const std::vector<std::string>& values);
+    //     void process_config(void);
+    //     std::string get_value(std::string opt);
+    //     values get_values(void);
+    //     bool has_option(const std::string& opt) const;
+
+    // protected:
+    //     std::string parse_value(std::string current, const std::string& next, std::string token, choices values);
+    //     std::string parse_value(std::string current, const std::string& next, choices values);
+    //     std::string set_value(option opt, std::string current, std::string next);
+    //     std::string set_value(std::string opt, std::string value);
+    //     bool is_short(const std::string& opt, const std::string& optshort) const;
+    //     bool is_long(const std::string& opt, const std::string& optlong) const;
+    //     bool is(const std::string& opt, std::string optshort, std::string optlong) const;
+
+    // private:
+    //     const options m_opts;
+    //     values m_optvalues{};
+    // };
 
 }
 
