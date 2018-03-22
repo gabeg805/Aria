@@ -27,6 +27,7 @@ ARIA_NAMESPACE
 namespace config
 {
     std::string read(const char* group, const char* key);
+    std::string read(const char* key);
     std::string read_str(const char* group, const char* key);
     int read_int(const char* group, const char* key);
     bool read_bool(const char* group, const char* key);

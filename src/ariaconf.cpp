@@ -46,6 +46,14 @@ namespace config
     }
 
     /**
+     * Read the configuration file and return the key value as a string 
+     */
+    std::string read(const char* key)
+    {
+        return config::read("Main", key);
+    }
+
+    /**
      * Read the configuration file and return the key value as an unescaped UTF-8
      * string
      */

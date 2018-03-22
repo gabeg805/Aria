@@ -33,7 +33,7 @@ class notification: public Gtk::Window
 public:
     notification();
 
-    int build(commandline::values cli);
+    int build(commandline::interface& cli);
     int show(void);
 
 protected:

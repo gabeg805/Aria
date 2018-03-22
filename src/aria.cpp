@@ -50,58 +50,36 @@ int main(int argc, char** argv)
 {
     /* Command line options */
     commandline::optlist_t options{
-        {"-h", "--help", "", commandline::no_argument,
-                "Print program usage."},
-        {"-t", "--title", "title", commandline::required_argument,
-                "Title of the notification."},
-        {"-b", "--body", "body", commandline::required_argument,
-                "Body of the notification."},
-        {"-X", "--xpos", "pos", commandline::required_argument,
-                "X-coordinate of where to put the notification on the screen."},
-        {"-Y", "--ypos", "pos", commandline::required_argument,
-                "Y-coordinate of where to put the notification on the screen."},
-        {"-m", "--margin","margin", commandline::required_argument,
-                "Margin all around the notification."},
-        {"-W", "--width", "width", commandline::required_argument,
-                "Width of the notification."},
-        {"-H", "--height", "height", commandline::required_argument,
-                "Height of the notification."},
-        {"-o", "--opacity", "opacity", commandline::required_argument,
-                "Opacity of the notification. [Default: 0.5]"},
-        {"-T", "--time", "time", commandline::required_argument,
-                "Amount of time to display the notification. [Default: 2s]"},
-        {"-f", "--font", "font", commandline::required_argument,
-                "Font to display text in. [Default: Dejavu Sans]"},
-        {"-ts", "--title-size", "size", commandline::required_argument,
-                "Size of title text. [Default: 16]"},
-        {"-bs", "--body-size", "size", commandline::required_argument,
-                "Size of body text. [Default: 12]"},
-        {"-bg", "--background", "color", commandline::required_argument,
-                "Background color. [Default: 0xffa5d0]"},
-        {"-fg", "--foreground", "color", commandline::required_argument,
-                "Foreground color. [Default: 0xffffff]"}
-        };
+        {"-h", "--help",        "",        commandline::no_argument,       "Print program usage."},
+        {"-t", "--title",       "title",   commandline::required_argument, "Title of the notification."},
+        {"-b", "--body",        "body",    commandline::required_argument, "Body of the notification."},
+        {"-X", "--xpos",        "pos",     commandline::required_argument, "X-coordinate of where to put the notification on the screen."},
+        {"-Y", "--ypos",        "pos",     commandline::required_argument, "Y-coordinate of where to put the notification on the screen."},
+        {"-m", "--margin",      "margin",  commandline::required_argument, "Margin all around the notification."},
+        {"-W", "--width",       "width",   commandline::required_argument, "Width of the notification."},
+        {"-H", "--height",      "height",  commandline::required_argument, "Height of the notification."},
+        {"-o", "--opacity",     "opacity", commandline::required_argument, "Opacity of the notification. [Default: 0.5]"},
+        {"-T", "--time",        "time",    commandline::required_argument, "Amount of time to display the notification. [Default: 2s]"},
+        {"-f", "--font",        "font",    commandline::required_argument, "Font to display text in. [Default: Dejavu Sans]"},
+        {"-ts", "--title-size", "size",    commandline::required_argument, "Size of title text. [Default: 16]"},
+        {"-bs", "--body-size",  "size",    commandline::required_argument, "Size of body text. [Default: 12]"},
+        {"-bg", "--background", "color",   commandline::required_argument, "Background color. [Default: 0xffa5d0]"},
+        {"-fg", "--foreground", "color",   commandline::required_argument, "Foreground color. [Default: 0xffffff]"}
+    };
 
     /* Process command line arguments */
-    // commandline::parser::make_type cli{commandline::parser::init(std::move(opts))};
-    // std::vector<std::string> args{argv + 1, argv + argc};
-    // cli->process_input(args);
-    // cli->process_config();
-    // /* Add a check for help */
-    // /* Long options not working */
-
-    commandline::interface* cli = new commandline::interface(options);
-    // cli->usage();
-    cli->parse(argv);
-
-    return 0;
+    // commandline::interface* cli = new commandline::interface(options);
+    commandline::interface cli(options);
+    cli.parse(argv);
+    // cli.print();
 
     /* Build notification bubble */
-    // Glib::RefPtr<Gtk::Application> app = Gtk::Application::create("");
-    // aria::notification Aria;
+    Glib::RefPtr<Gtk::Application> app = Gtk::Application::create("");
+    aria::notification Aria;
 
-    // Aria.build(cli->get_values());
-    // Aria.show();
+    Aria.build(cli);
+    // // Aria.show();
 
     // return app->run(Aria);
+    return 0;
 }

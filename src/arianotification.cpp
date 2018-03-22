@@ -110,60 +110,93 @@ void notification::on_screen_changed(const Glib::RefPtr<Gdk::Screen>& previous_s
     gtk_widget_set_visual(GTK_WIDGET(gobj()), visual->gobj());
 }
 
-std::string get_val(commandline::values optvalues, std::string opt)
-{
-    if (optvalues.find(opt) != optvalues.end()) {
-        return optvalues.find(opt)->second;
-    }
-    return "";
-}
-
 /**
  * Build the notification bubble
  */
-int notification::build(commandline::values optvalues)
+int notification::build(commandline::interface& cli)
 {
-    std::string title = get_val(optvalues, "title");
-    std::string body = get_val(optvalues, "body");
-    std::string font = get_val(optvalues, "font");
-    std::string titlesize = get_val(optvalues, "title-size");
-    std::string bodysize = get_val(optvalues, "body-size");
-    std::string background = get_val(optvalues, "background");
-    std::string foreground = get_val(optvalues, "foreground");
-    std::string opacity = get_val(optvalues, "opacity");
-    std::string margin = get_val(optvalues, "margin");
-    std::string time = get_val(optvalues, "time");
-    std::string width = get_val(optvalues, "width");
-    std::string height = get_val(optvalues, "height");
-    std::string xpos = get_val(optvalues, "xpos");
-    std::string ypos = get_val(optvalues, "ypos");
+    std::string title = cli.get("--title");
+    std::string body = cli.get("--body");
+    std::string font = cli.get("--font");
+    std::string titlesize = cli.get("--title-size");
+    std::string bodysize = cli.get("--body-size");
+    std::string background = cli.get("--background");
+    std::string foreground = cli.get("--foreground");
+    std::string opacity = cli.get("--opacity");
+    std::string margin = cli.get("--margin");
+    std::string time = cli.get("--time");
+    std::string width = cli.get("--width");
+    std::string height = cli.get("--height");
+    std::string xpos = cli.get("--xpos");
+    std::string ypos = cli.get("--ypos");
 
+    printf("Before...\n");
+    printf("Title      : %s~\n", title.c_str());
+    printf("Body       : %s~\n", body.c_str());
+    printf("Font       : %s~\n", font.c_str());
+    printf("Title-size : %s~\n", titlesize.c_str());
+    printf("Body-size  : %s~\n", bodysize.c_str());
+    printf("Background : %s~\n", background.c_str());
+    printf("Foreground : %s~\n", foreground.c_str());
+    printf("Opacity    : %s~\n", opacity.c_str());
+    printf("Margin     : %s~\n", margin.c_str());
+    printf("Time       : %s~\n", time.c_str());
+    printf("Width      : %s~\n", width.c_str());
+    printf("Height     : %s~\n", height.c_str());
+    printf("Xpos       : %s~\n", xpos.c_str());
+    printf("Ypos       : %s~\n", ypos.c_str());
+
+    if (this->set_font(font) < 0) {
+        return 1;
+    }
+    if (this->set_title_size(titlesize) < 0) {
+        return 1;
+    }
+    if (this->set_body_size(titlesize) < 0) {
+        return 1;
+    }
     if ((this->set_title(title, font, titlesize) < 0)
         && (this->set_body(body, font, bodysize) < 0))
     {
         return 1;
     }
-    if (this->set_background(background) < 0) {
-        return 2;
-    }
-    if (this->set_foreground(foreground) < 0) {
-        return 3;
-    }
-    if (this->set_margin(margin) < 0) {
-        return 4;
-    }
-    if (this->set_opacity(opacity) < 0) {
-        return 5;
-    }
-    if (this->set_time(time) < 0) {
-        return 6;
-    }
-    if (this->set_size(width, height) < 0) {
-        return 7;
-    }
-    if (this->set_position(xpos, ypos) < 0) {
-        return 8;
-    }
+    // if (this->set_background(background) < 0) {
+    //     return 2;
+    // }
+    // if (this->set_foreground(foreground) < 0) {
+    //     return 3;
+    // }
+    // if (this->set_margin(margin) < 0) {
+    //     return 4;
+    // }
+    // if (this->set_opacity(opacity) < 0) {
+    //     return 5;
+    // }
+    // if (this->set_time(time) < 0) {
+    //     return 6;
+    // }
+    // if (this->set_size(width, height) < 0) {
+    //     return 7;
+    // }
+    // if (this->set_position(xpos, ypos) < 0) {
+    //     return 8;
+    // }
+
+    printf("After...\n");
+    printf("Title      : %s~\n", title.c_str());
+    printf("Body       : %s~\n", body.c_str());
+    printf("Font       : %s~\n", font.c_str());
+    printf("Title-size : %s~\n", titlesize.c_str());
+    printf("Body-size  : %s~\n", bodysize.c_str());
+    printf("Background : %s~\n", background.c_str());
+    printf("Foreground : %s~\n", foreground.c_str());
+    printf("Opacity    : %s~\n", opacity.c_str());
+    printf("Margin     : %s~\n", margin.c_str());
+    printf("Time       : %s~\n", time.c_str());
+    printf("Width      : %s~\n", width.c_str());
+    printf("Height     : %s~\n", height.c_str());
+    printf("Xpos       : %s~\n", xpos.c_str());
+    printf("Ypos       : %s~\n", ypos.c_str());
 
     return 0;
 }
@@ -178,6 +211,17 @@ int notification::show(void)
     this->resize();
     this->reposition();
     return 0;
+}
+
+/**
+ * Set font
+ */
+int notification::set_font(std::string& font)
+{
+    if (font.empty()) {
+        font = config::read("font");
+    }
+    return (font.empty()) ? -1 : 0;
 }
 
 /**
@@ -218,8 +262,7 @@ int notification::set_text(std::string text, std::string font, std::string size)
     fd.set_size(std::stoi(size) * PANGO_SCALE);
 
     size_t length = 2;
-    for(size_t i=0; (i = text.find("\\", i)) != std::string::npos; )
-    {
+    for(size_t i=0; (i = text.find("\\", i)) != std::string::npos; ) {
         text.replace(i, length, "\n");
         i += length;
     }
