@@ -79,9 +79,18 @@ namespace commandline
         int listflag = 0;
 
         for ( ; *a != NULL; a++) {
-            if (this->has(*a)) {
-                ;
+            if (!this->is_option(*a)) {
+                fprintf(stderr, "%s: Invalid option '%s'\n", PROGRAM, *a);
+                exit(1);
             }
+
+            if (this->is_short_option(*a)) {
+                printf("This is a short option.\n");
+            }
+            else {
+                printf("This is a long option.\n");
+            }
+
             printf("~%s~\n", *a);
         }
         return;
@@ -92,7 +101,7 @@ namespace commandline
      */
     std::string interface::get(std::string opt)
     {
-        return "";
+        return this->m_table[opt];
     }
 
     /**
@@ -100,21 +109,52 @@ namespace commandline
      */
     bool interface::has(std::string opt)
     {
-        return (std::find(this->m_options.start(), this->m_options.end(), opt) != this->m_options.end());
-        return false;
+        return (this->m_table.find(opt) != this->m_table.end());
+    }
+
+
+
+    /**
+     * Find option in valid command line options
+     */
+    option_t* interface::find_option(std::string opt)
+    {
+        std::vector<option_t>::iterator it;
+        for (it=(this->m_options).begin(); it != (this->m_options).end(); ++it) {
+            // if ((*it.shortopt == opt) || (*it.longopt == opt)) {
+            //     return &(*it);
+            // }
+        }
+        return NULL;
     }
 
     /**
-     * Find option in vector
+     * Check if the given option is a valid short or long command line option
      */
-    option_t interface::find(std::string opt)
+    bool interface::is_option(std::string opt)
     {
-        for (option_t option : this->m_options) {
-            if ((option.shortopt == opt) || (option.longopt == opt)) {
-                return option;
-            }
-        }
-        return 
+        return (this->is_short_option(opt) || this->is_long_option(opt));
+    }
+
+    /**
+     * Check if the given option is a valid short command line option
+     */
+    bool interface::is_short_option(std::string opt)
+    {
+        option_t* option = this->find_option(opt);
+        return (option && (option->shortopt == opt));
+    }
+
+    /**
+     * Check if the given option is a valid long command line option
+     */
+    bool interface::is_long_option(std::string opt)
+    {
+        option_t* option = this->find_option(opt);
+        return (option && (option->longopt == opt));
+    }
+
+
 }
 
 // namespace commandline

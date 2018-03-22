@@ -39,6 +39,7 @@ namespace commandline
         optional_argument,
         list_argument
     };
+
     typedef struct option option_t;
 
     struct option
@@ -49,37 +50,13 @@ namespace commandline
         argument_t  argument;
         std::string desc;
 
-        /*
-        friend bool operator==(const option_t&, const option_t&);
-        virtual bool is_equal(const option_t& opt) const {
-            return ((opt.shortopt == this->shortopt) \
-                    && (opt.longopt == this->longopt) \
-                    && (opt.name == this->name) \
+        bool operator== (const option_t& opt) {
+            return ((opt.shortopt == this->shortopt)
+                    && (opt.longopt == this->longopt)
+                    && (opt.name == this->name)
                     && (opt.argument == this->argument));
         }
-        */
     };
-
-
-    
-    // typedef struct optlist_t
-    // {
-    //     std::vector<option_t> list;
-
-    //     /**
-    //      * Find option in option list
-    //      */
-    //     // option_t find(std::string opt) {
-    //     //     option_t o;
-    //     //     for (option_t option : list) {
-    //     //         std::cout << option.longopt << std::endl;
-    //     //         if (list.back() == option) {
-    //     //             o = option;
-    //     //         }
-    //     //     }
-    //     //     return o;
-    //     // }
-    // } optlist_t;
 
     typedef std::vector<option_t> optlist_t;
     typedef std::unordered_map<std::string, std::string> keyval_t;
@@ -96,7 +73,14 @@ namespace commandline
         std::string get(std::string opt);
         bool has(std::string opt);
 
-    private:
+
+    protected:
+        option_t* find_option(std::string opt);
+        std::string extract_value(std::string opt);
+        bool is_option(std::string opt);
+        bool is_short_option(std::string opt);
+        bool is_long_option(std::string opt);
+
         const optlist_t m_options;
         keyval_t m_table;
     };
@@ -154,11 +138,6 @@ namespace commandline
     // };
 
 }
-
-// bool operator==(const commandline::option_t& a, const commandline::option_t& b) {
-//     return typeid(a) == typeid(b) // Allow compare only instances of the same dynamic type
-//            && a.is_equal(b);       // If types are the same then do the comparision.
-// }
 
 ARIA_NAMESPACE_END
 
