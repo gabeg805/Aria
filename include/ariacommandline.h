@@ -75,11 +75,15 @@ namespace commandline
 
 
     protected:
-        option_t* find_option(std::string opt);
+        const option_t* find_option(std::string opt);
+        std::string extract(std::string opt, int field);
+        std::string extract_option(std::string opt);
         std::string extract_value(std::string opt);
         bool is_option(std::string opt);
         bool is_short_option(std::string opt);
+        bool is_short_option(const option_t* option, std::string opt);
         bool is_long_option(std::string opt);
+        bool is_long_option(const option_t* option, std::string opt);
 
         const optlist_t m_options;
         keyval_t m_table;

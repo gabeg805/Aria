@@ -75,23 +75,48 @@ namespace commandline
      */
     void interface::parse(char** argv)
     {
-        char** a = argv+1;
+        char** arg = argv+1;
+        char *key = *arg;
+        const option_t* option;
         int listflag = 0;
 
-        for ( ; *a != NULL; a++) {
-            if (!this->is_option(*a)) {
-                fprintf(stderr, "%s: Invalid option '%s'\n", PROGRAM, *a);
+        for ( ; key != NULL; ++arg, key=*arg) {
+            if (!this->is_option(key)) {
+                fprintf(stderr, "%s: Invalid option '%s'\n", PROGRAM, key);
                 exit(1);
             }
 
-            if (this->is_short_option(*a)) {
+            option = this->find_option(key);
+
+            if (this->is_short_option(key)) {
                 printf("This is a short option.\n");
             }
             else {
                 printf("This is a long option.\n");
             }
+            printf("~%s~\n", key);
 
-            printf("~%s~\n", *a);
+            this->m_table[key] = "";
+
+            switch (option->argument) {
+            case commandline::no_argument:
+                continue;
+            case commandline::list_argument:
+                listflag = 1;
+                continue;
+            case commandline::optional_argument:
+                if (this->is_option(*(arg+1))) {
+                    continue;
+                }
+            case commandline::required_argument:
+            default:
+                ++arg;
+                printf("~%s~\n", *arg);
+                this->m_table[key] = *arg;
+                break;
+            }
+
+            // printf("~%s~\n", *a);
         }
         return;
     }
@@ -117,15 +142,61 @@ namespace commandline
     /**
      * Find option in valid command line options
      */
-    option_t* interface::find_option(std::string opt)
+    const option_t* interface::find_option(std::string opt)
     {
-        std::vector<option_t>::iterator it;
-        for (it=(this->m_options).begin(); it != (this->m_options).end(); ++it) {
-            // if ((*it.shortopt == opt) || (*it.longopt == opt)) {
-            //     return &(*it);
-            // }
+        optlist_t::const_iterator it;
+        const option_t* ptr;
+        for (it=this->m_options.cbegin(); it != this->m_options.cend(); ++it)
+        {
+            ptr = &(*it);
+            if (this->is_short_option(ptr, opt) || this->is_long_option(ptr, opt)) {
+                return ptr;
+            }
         }
         return NULL;
+    }
+
+    /**
+     * Extract field from long option
+     */
+    std::string interface::extract(std::string opt, int field)
+    {
+        if ((field != 1) && (field != 2)) {
+            return "";
+        }
+
+        int length = opt.length();
+        int i;
+        for (i=0; i < length; ++i) {
+            if (opt[i] == '=') {
+                break;
+            }
+            if ((i+1) == length) {
+                return "";
+            }
+        }
+
+        if (field == 1) {
+            return opt.substr(0, i);
+        }
+        ++i;
+        return opt.substr(i, length-i);
+    }
+
+    /**
+     * Extract option field from long option
+     */
+    std::string interface::extract_option(std::string opt)
+    {
+        return this->extract(opt, 1);
+    }
+
+    /**
+     * Extract value field from long option
+     */
+    std::string interface::extract_value(std::string opt)
+    {
+        return this->extract(opt, 2);
     }
 
     /**
@@ -141,8 +212,16 @@ namespace commandline
      */
     bool interface::is_short_option(std::string opt)
     {
-        option_t* option = this->find_option(opt);
-        return (option && (option->shortopt == opt));
+        const option_t* option = this->find_option(opt);
+        return this->is_short_option(option, opt);
+    }
+
+    /**
+     * Check if the given option is a valid short command line option
+     */
+    bool interface::is_short_option(const option_t* option, std::string opt)
+    {
+        return (option && (opt == option->shortopt));
     }
 
     /**
@@ -150,8 +229,16 @@ namespace commandline
      */
     bool interface::is_long_option(std::string opt)
     {
-        option_t* option = this->find_option(opt);
-        return (option && (option->longopt == opt));
+        const option_t* option = this->find_option(opt);
+        return this->is_long_option(option, opt);
+    }
+
+    /**
+     * Check if the given option is a valid long command line option
+     */
+    bool interface::is_long_option(const option_t* option, std::string opt)
+    {
+        return (option && (this->extract_option(opt) == option->longopt));
     }
 
 
