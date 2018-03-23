@@ -75,9 +75,9 @@ bool notification::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     int r;
     int g;
     int b;
-    std::istringstream(this->m_background.substr(0, 2)) >> std::hex >> r;
-    std::istringstream(this->m_background.substr(2, 2)) >> std::hex >> g;
-    std::istringstream(this->m_background.substr(4, 2)) >> std::hex >> b;
+    std::istringstream(this->m_background.substr(1, 2)) >> std::hex >> r;
+    std::istringstream(this->m_background.substr(3, 2)) >> std::hex >> g;
+    std::istringstream(this->m_background.substr(5, 2)) >> std::hex >> b;
 
     cr->save();
     cr->set_line_width(0);
@@ -326,17 +326,8 @@ int notification::set_color(const std::string region, std::string& color)
         }
     }
 
-    /* Fix string in case entered strangely */
-    if (isdigit(color[0])) {
-        if ((color.substr(0, 2) == "0x") || (color.substr(0, 2) == "0X")) {
-            color.erase(0, 2);
-        }
-        if (color[0] != '#') {
-            color.insert(0, 1, '#');
-        }
-    }
+    color = this->fix_color(color);
 
-    /* Assign color */
     Gdk::RGBA attr(color);
     if (region == "background") {
         this->m_background = color;
@@ -456,6 +447,42 @@ int notification::set_position(std::string& xpos, std::string& ypos)
         this->m_ypos = std::stoi(ypos);
     }
     return 0;
+}
+
+/**
+ * Fix color string in case entered strangely
+ */
+std::string notification::fix_color(std::string& color)
+{
+    if ((color.substr(0, 2) == "0x") || (color.substr(0, 2) == "0X")) {
+        color.erase(0, 2);
+    }
+    if (this->is_hex_color(color)) {
+        if (color[0] != '#') {
+            color.insert(0, 1, '#');
+        }
+    }
+
+    return color;
+}
+
+/**
+ * Check if color string is in hex
+ */
+bool notification::is_hex_color(std::string& color)
+{
+    if (color[0] == '#') {
+        return true;
+    }
+    if (color.length() != 6) {
+        return false;
+    }
+
+    int start = 0;
+    if ((color.substr(0, 2) == "0x") || (color.substr(0, 2) == "0X")) {
+        start = 2;
+    }
+    return (color.find_first_not_of("0123456789ABCDEFabcdef", start) == std::string::npos);
 }
 
 /**

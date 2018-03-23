@@ -50,6 +50,8 @@ public:
     int set_time(std::string& time);
     int set_size(std::string& width, std::string& height);
     int set_position(std::string& xpos, std::string& ypos);
+    std::string fix_color(std::string& color);
+    bool is_hex_color(std::string& color);
     int resize(void);
     int reposition(void);
 
