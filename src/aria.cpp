@@ -68,18 +68,15 @@ int main(int argc, char** argv)
     };
 
     /* Process command line arguments */
-    // commandline::interface* cli = new commandline::interface(options);
     commandline::interface cli(options);
     cli.parse(argv);
-    // cli.print();
 
     /* Build notification bubble */
     Glib::RefPtr<Gtk::Application> app = Gtk::Application::create("");
     aria::notification Aria;
 
     Aria.build(cli);
-    // Aria.show();
+    Aria.show();
 
     return app->run(Aria);
-    // return 0;
 }
