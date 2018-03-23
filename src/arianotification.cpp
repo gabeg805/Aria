@@ -14,9 +14,10 @@
  */
 
 /* Includes */
-#include "arianotification.h"
+#include "arianotification.hpp"
 #include "AriaSharedMem.h"
-#include "ariacommandline.h"
+#include "ariacommandline.hpp"
+#include "ariaconf.hpp"
 #include <gtkmm.h>
 #include <gdkmm.h>
 #include <time.h>
@@ -146,43 +147,37 @@ int notification::build(commandline::interface& cli)
     printf("Xpos       : %s~\n", xpos.c_str());
     printf("Ypos       : %s~\n", ypos.c_str());
 
-    if (this->set_font(font) < 0) {
-        return 1;
-    }
-    if (this->set_title_size(titlesize) < 0) {
-        return 1;
-    }
-    if (this->set_body_size(titlesize) < 0) {
-        return 1;
-    }
     if ((this->set_title(title, font, titlesize) < 0)
         && (this->set_body(body, font, bodysize) < 0))
     {
+        printf("Oh no!\n");
         return 1;
     }
-    // if (this->set_background(background) < 0) {
-    //     return 2;
-    // }
-    // if (this->set_foreground(foreground) < 0) {
-    //     return 3;
-    // }
-    // if (this->set_margin(margin) < 0) {
-    //     return 4;
-    // }
-    // if (this->set_opacity(opacity) < 0) {
-    //     return 5;
-    // }
-    // if (this->set_time(time) < 0) {
-    //     return 6;
-    // }
-    // if (this->set_size(width, height) < 0) {
-    //     return 7;
-    // }
-    // if (this->set_position(xpos, ypos) < 0) {
-    //     return 8;
-    // }
+    if (this->set_background(background) < 0) {
+        printf("Oh no!\n");
+        return 2;
+    }
+    if (this->set_foreground(foreground) < 0) {
+        printf("Oh no!\n");
+        return 3;
+    }
+    if (this->set_margin(margin) < 0) {
+        return 4;
+    }
+    if (this->set_opacity(opacity) < 0) {
+        return 5;
+    }
+    if (this->set_time(time) < 0) {
+        return 6;
+    }
+    if (this->set_size(width, height) < 0) {
+        return 7;
+    }
+    if (this->set_position(xpos, ypos) < 0) {
+        return 8;
+    }
 
-    printf("After...\n");
+    printf("\n\nAfter...\n");
     printf("Title      : %s~\n", title.c_str());
     printf("Body       : %s~\n", body.c_str());
     printf("Font       : %s~\n", font.c_str());
@@ -214,33 +209,6 @@ int notification::show(void)
 }
 
 /**
- * Set font
- */
-int notification::set_font(std::string& font)
-{
-    if (font.empty()) {
-        font = config::read("font");
-    }
-    return (font.empty()) ? -1 : 0;
-}
-
-/**
- * Set the title
- */
-int notification::set_title(std::string title, std::string font, std::string size)
-{
-    return this->set_text(title, font, size);
-}
-
-/**
- * Set the body
- */
-int notification::set_body(std::string body, std::string font, std::string size)
-{
-    return this->set_text(body, font, size);
-}
-
-/**
  * Set the font family, font size, and text for the given notification field.
  */
 int notification::set_text(std::string text, std::string font, std::string size)
@@ -257,7 +225,6 @@ int notification::set_text(std::string text, std::string font, std::string size)
 
     Gtk::Label *label = Gtk::manage(new Gtk::Label());
     Pango::FontDescription fd;
-
     fd.set_family(font);
     fd.set_size(std::stoi(size) * PANGO_SCALE);
 
@@ -266,16 +233,6 @@ int notification::set_text(std::string text, std::string font, std::string size)
         text.replace(i, length, "\n");
         i += length;
     }
-
-    // void find_and_replace(string& source, string const& find, string const& replace)
-    // {
-    //     for(string::size_type i = 0; (i = source.find(find, i)) != string::npos;)
-    //     {
-    //         source.replace(i, find.length(), replace);
-    //         i += replace.length();
-    //     }
-    // }
-    std::cout << "Text : " << text << std::endl;
 
     label->set_use_markup(true);
     label->set_markup(text);
@@ -286,48 +243,145 @@ int notification::set_text(std::string text, std::string font, std::string size)
 }
 
 /**
- * Set the background color
+ * Set font
  */
-int notification::set_background(std::string color)
+int notification::set_font(std::string& font)
 {
-    this->m_background = color;
-    if (color.empty()) {
+    if (font.empty()) {
+        font = config::read("font");
+    }
+    return (font.empty()) ? -1 : 0;
+}
+
+/**
+ * Set font size
+ */
+int notification::set_font_size(const std::string region, std::string& size)
+{
+    if (region.empty()) {
         return -1;
     }
-    if (color[0] != '#') {
-        color.insert(0, 1, '#');
+    else if ((region != "title") && (region != "body")) {
+        return -2;
+    }
+    else {
+        size = config::read((region+"-size").c_str());
+    }
+    return 0;
+}
+
+/**
+ * Set title size
+ */
+int notification::set_title_size(std::string& size)
+{
+    return this->set_font_size("title", size);
+}
+
+/**
+ * Set body size
+ */
+int notification::set_body_size(std::string& size)
+{
+    return this->set_font_size("body", size);
+}
+
+/**
+ * Set the title
+ */
+int notification::set_title(std::string& title, std::string& font, std::string& size)
+{
+    if (this->set_font(font) < 0) {
+        return -2;
+    }
+    if (this->set_title_size(size) < 0) {
+        return -3;
+    }
+    return this->set_text(title, font, size);
+}
+
+/**
+ * Set the body
+ */
+int notification::set_body(std::string& body, std::string& font, std::string& size)
+{
+    if (this->set_font(font) < 0) {
+        return -2;
+    }
+    if (this->set_body_size(size) < 0) {
+        return -3;
+    }
+    return this->set_text(body, font, size);
+}
+
+/**
+ * Set foreground/background color
+ */
+int notification::set_color(const std::string region, std::string& color)
+{
+    if (color.empty()) {
+        color = config::read(region.c_str());
+        if (color.empty()) {
+            return -1;
+        }
     }
 
-    Gdk::RGBA background(color);
-    this->override_background_color(background, Gtk::STATE_FLAG_NORMAL);
+    /* Fix string in case entered strangely */
+    if (isdigit(color[0])) {
+        if ((color.substr(0, 2) == "0x") || (color.substr(0, 2) == "0X")) {
+            color.erase(0, 2);
+        }
+        if (color[0] != '#') {
+            color.insert(0, 1, '#');
+        }
+    }
+
+    /* Assign color */
+    Gdk::RGBA attr(color);
+    if (region == "background") {
+        this->m_background = color;
+        this->override_background_color(attr, Gtk::STATE_FLAG_NORMAL);
+    }
+    else if (region == "foreground") {
+        this->override_color(attr, Gtk::STATE_FLAG_NORMAL);
+    }
+    else {
+        return -2;
+    }
     return 0;
+}
+
+/**
+ * Set the background color
+ */
+int notification::set_background(std::string& color)
+{
+    return this->set_color("background", color);
 }
 
 /**
  * Set the foreground color -- this is the font color
  */
-int notification::set_foreground(std::string color)
+int notification::set_foreground(std::string& color)
 {
-    if (color.empty()) {
-        return -1;
-    }
-    if (color[0] != '#') {
-        color.insert(0, 1, '#');
-    }
-
-    Gdk::RGBA foreground(color);
-    this->override_color(foreground, Gtk::STATE_FLAG_NORMAL);
-    return 0;
+    return this->set_color("foreground", color);
 }
 
 /**
  * Set the margin
  */
-int notification::set_margin(std::string margin)
+int notification::set_margin(std::string& margin)
 {
+    if (margin.empty()) {
+        margin = config::read("margin");
+        if (margin.empty()) {
+            return -1;
+        }
+    }
+
     int m = std::stoi(margin);
     if (m < 0) {
-        return -1;
+        return -2;
     }
 
     bubble.set_margin_top(m);
@@ -339,13 +393,17 @@ int notification::set_margin(std::string margin)
 
 /**
  * Set opacity of window
+ * To-do: Check if input is int or double
  */
-int notification::set_opacity(std::string opacity)
+int notification::set_opacity(std::string& opacity)
 {
-    this->m_opacity = opacity;
     if (opacity.empty()) {
-        return -1;
+        opacity = config::read("opacity");
+        if (opacity.empty()) {
+            return -1;
+        }
     }
+    this->m_opacity = opacity;
     // Gtk::Window::set_opacity(std::stod(opacity));
     return 0;
 }
@@ -353,11 +411,18 @@ int notification::set_opacity(std::string opacity)
 /**
  * Set the time at which afterwards, the notification bubble will close
  */
-int notification::set_time(std::string time)
+int notification::set_time(std::string& time)
 {
+    if (time.empty()) {
+        time = config::read("time");
+        if (time.empty()) {
+            return -1;
+        }
+    }
+
     int t = std::stoi(time);
     if (t <= 0) {
-        return -1;
+        return -2;
     }
 
     Glib::signal_timeout().connect_seconds_once(
@@ -368,7 +433,7 @@ int notification::set_time(std::string time)
 /**
  * Set the notification bubble size
  */
-int notification::set_size(std::string width, std::string height)
+int notification::set_size(std::string& width, std::string& height)
 {
     if (!width.empty()) {
         this->m_width = std::stoi(width);
@@ -382,7 +447,7 @@ int notification::set_size(std::string width, std::string height)
 /**
  * Set the notification bubble position.
  */
-int notification::set_position(std::string xpos, std::string ypos)
+int notification::set_position(std::string& xpos, std::string& ypos)
 {
     if (!xpos.empty()) {
         this->m_xpos = std::stoi(xpos);

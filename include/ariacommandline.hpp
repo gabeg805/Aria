@@ -1,6 +1,6 @@
 /* -----------------------------------------------------------------------------
  * 
- * Name:    commandline.h
+ * Name:    commandline.hpp
  * Author:  Gabriel Gonzalez
  * Email:   gabeg@bu.edu
  * License: The MIT License (MIT)
@@ -15,11 +15,11 @@
  */
 
 /* Header guard */
-#ifndef ARIA_COMMAND_LINE_H
-#define ARIA_COMMAND_LINE_H
+#ifndef ARIA_COMMAND_LINE_HPP
+#define ARIA_COMMAND_LINE_HPP
 
 /* Includes */
-#include "ariadef.h"
+#include "ariadef.hpp"
 #include <iostream>
 #include <map>
 #include <memory>
@@ -103,4 +103,4 @@ namespace commandline
 
 ARIA_NAMESPACE_END
 
-#endif /* ARIA_COMMAND_LINE_H */
+#endif /* ARIA_COMMAND_LINE_HPP */

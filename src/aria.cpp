@@ -34,8 +34,8 @@
  */
 
 /* Includes */
-#include "arianotification.h"
-#include "ariacommandline.h"
+#include "arianotification.hpp"
+#include "ariacommandline.hpp"
 #include <gtkmm.h>
 
 #include <iostream>
@@ -78,8 +78,8 @@ int main(int argc, char** argv)
     aria::notification Aria;
 
     Aria.build(cli);
-    // // Aria.show();
+    // Aria.show();
 
-    // return app->run(Aria);
-    return 0;
+    return app->run(Aria);
+    // return 0;
 }

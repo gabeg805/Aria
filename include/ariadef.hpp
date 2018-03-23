@@ -1,6 +1,6 @@
 /* -----------------------------------------------------------------------------
  * 
- * Name:    ariadef.h
+ * Name:    ariadef.hpp
  * Author:  Gabriel Gonzalez
  * Email:   gabeg@bu.edu
  * License: The MIT License (MIT)

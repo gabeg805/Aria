@@ -13,11 +13,21 @@
  */
 
 /* Includes */
-#include "ariadef.h"
-#include "ariaconf.h"
+#include "ariadef.hpp"
+#include "ariaconf.hpp"
 #include <glib.h>
 #include <iostream>
 #include <string>
+#include <cstdlib>
+#include <cstring>
+
+/*
+ *
+ * HAVE CHECK FOR NULL WHEN RETURNING FROM THESE FUNCTIONS
+ * HAVE std::string BE INPUT PARAMETERS FOR FUNCTIONS
+ *
+ */
+
 
 ARIA_NAMESPACE
 
@@ -33,13 +43,13 @@ namespace config
         char* value;
 
         if (config::new_key_file(&keyfile, ARIA_CONFIG_FILE) < 0) {
-            return NULL;
+            return "";
         }
 
         value = g_key_file_get_value(keyfile, group, key, &err);
 
         if (config::is_key_err(&err)) {
-            return NULL;
+            return "";
         }
 
         return std::string(value);
@@ -64,13 +74,13 @@ namespace config
         char* value;
 
         if (config::new_key_file(&keyfile, ARIA_CONFIG_FILE) < 0) {
-            return NULL;
+            return "";
         }
 
         value = g_key_file_get_string(keyfile, group, key, &err);
 
         if (config::is_key_err(&err)) {
-            return NULL;
+            return "";
         }
 
         return std::string(value);
@@ -194,7 +204,6 @@ namespace config
             g_error_free(*err);
             return 1;
         }
-
         return 0;
     }
 }

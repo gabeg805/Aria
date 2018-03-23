@@ -16,9 +16,9 @@
  */
 
 /* Includes */
-#include "ariacommandline.h"
-#include "ariadef.h"
-#include "ariaconf.h"
+#include "ariacommandline.hpp"
+#include "ariadef.hpp"
+#include "ariaconf.hpp"
 #include <algorithm>
 #include <iostream>
 #include <memory>

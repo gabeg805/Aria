@@ -1,6 +1,6 @@
 /* -----------------------------------------------------------------------------
  * 
- * Name:    ariaconf.h
+ * Name:    ariaconf.hpp
  * Author:  Gabriel Gonzalez
  * Email:   gabeg@bu.edu
  * License: The MIT License (MIT)
@@ -13,11 +13,11 @@
  */
 
 /* Header guard */
-#ifndef ARIA_CONF_H
-#define ARIA_CONF_H
+#ifndef ARIA_CONF_HPP
+#define ARIA_CONF_HPP
 
 /* Includes */
-#include "ariadef.h"
+#include "ariadef.hpp"
 #include <glib.h>
 #include <string>
 #include <vector>
@@ -39,4 +39,4 @@ namespace config
 
 ARIA_NAMESPACE_END
 
-#endif /* ARIA_CONF_H */
+#endif /* ARIA_CONF_HPP */
