@@ -62,7 +62,9 @@ protected:
 private:
     static void cleanup(int sig);
 
-    Gtk::Box bubble;
+    Gtk::Box m_bubble;
+    Gtk::Box m_icon;
+    Gtk::Box m_text;
     std::string m_background;
     std::string m_opacity;
     int m_width;

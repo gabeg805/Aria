@@ -36,7 +36,9 @@ ARIA_NAMESPACE
  */
 notification::notification() :
     Gtk::Window(Gtk::WINDOW_POPUP),
-    bubble(Gtk::ORIENTATION_VERTICAL)
+    m_bubble(Gtk::ORIENTATION_HORIZONTAL),
+    m_icon(Gtk::ORIENTATION_VERTICAL),
+    m_text(Gtk::ORIENTATION_VERTICAL)
 {
     this->m_background = "";
     this->m_opacity = "";
@@ -56,6 +58,123 @@ notification::notification() :
     std::signal(SIGTERM, cleanup);
 }
 
+/**
+ * Build the notification bubble
+ */
+int notification::build(commandline::interface& cli)
+{
+    std::string title = cli.get("--title");
+    std::string body = cli.get("--body");
+    std::string font = cli.get("--font");
+    std::string titlesize = cli.get("--title-size");
+    std::string bodysize = cli.get("--body-size");
+    std::string background = cli.get("--background");
+    std::string foreground = cli.get("--foreground");
+    std::string opacity = cli.get("--opacity");
+    std::string margin = cli.get("--margin");
+    std::string time = cli.get("--time");
+    std::string width = cli.get("--width");
+    std::string height = cli.get("--height");
+    std::string xpos = cli.get("--xpos");
+    std::string ypos = cli.get("--ypos");
+
+    if ((this->set_title(title, font, titlesize) < 0)
+        && (this->set_body(body, font, bodysize) < 0))
+    {
+        return 1;
+    }
+    if (this->set_background(background) < 0) {
+        return 2;
+    }
+    if (this->set_foreground(foreground) < 0) {
+        return 3;
+    }
+    if (this->set_margin(margin) < 0) {
+        return 4;
+    }
+    if (this->set_opacity(opacity) < 0) {
+        return 5;
+    }
+    if (this->set_time(time) < 0) {
+        return 6;
+    }
+    if (this->set_size(width, height) < 0) {
+        return 7;
+    }
+    if (this->set_position(xpos, ypos) < 0) {
+        return 8;
+    }
+
+    return 0;
+}
+
+/**
+ * Display the notification bubble and size it accordingly
+ */
+int notification::show(void)
+{
+    // m_bubble.pack_start(this->m_icon);
+    m_bubble.pack_start(this->m_text);
+    this->add(this->m_bubble);
+    this->show_all_children();
+
+    // this->m_text.set_y_align(0.5);
+
+    this->resize();
+    this->reposition();
+    return 0;
+}
+
+/**
+ * Resize the notification bubble to the desired width and height
+ */
+int notification::resize(void)
+{
+    int w = this->m_width;
+    int h = this->m_height;
+    int tmp;
+
+    if (!this->m_width) {
+        this->get_size(w, tmp);
+    }
+    if (!this->m_height) {
+        this->get_size(tmp, h);
+    }
+
+    this->set_default_size(w, h);
+    this->m_width = w;
+    this->m_height = h;
+    return 0;
+}
+
+/**
+ * Move the notification bubble to the desired position.
+ * To-do: Change 1920 to screen width
+ */
+int notification::reposition(void)
+{
+    struct SharedMemType data = {.id   = getpid(),
+                                 .time = time(0),
+                                 .x    = this->m_xpos,
+                                 .y    = this->m_ypos,
+                                 .w    = this->m_width,
+                                 .h    = this->m_height};
+    AriaSharedMem::add(&data, 10);
+    data.x = (1920 - data.w) - data.x;
+    this->move(data.x, data.y);
+    return 0;
+}
+
+/**
+ * Cleanup any memory mapped data and gracefully shutdown program
+ */
+void notification::cleanup(int sig)
+{
+    AriaSharedMem::remove();
+    exit(sig);
+}
+
+
 bool notification::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 {
     Glib::RefPtr<Gdk::Screen> screen = this->get_screen();
@@ -64,6 +183,17 @@ bool notification::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     double width = this->m_width;
     double height = this->m_height;
 
+    // Go with natural width and height
+    int mwidth;
+    int nwidth;
+    int mheight;
+    int nheight;
+    this->m_bubble.get_preferred_width(mwidth, nwidth);
+    this->m_bubble.get_preferred_height(mheight, nheight);
+
+    printf("TextWidth  : %d %d\n", mwidth, nwidth);
+    printf("TextHeight : %d %d\n", mheight, nheight);
+
     Gtk::Allocation allocation = get_allocation();
     if (!this->m_width) {
         width = 1.0*allocation.get_width();
@@ -71,6 +201,10 @@ bool notification::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     if (!this->m_height) {
         height = 1.0*allocation.get_height();
     }
+
+    printf("Width  : %lf\n", width);
+    printf("Height : %lf\n", height);
+    printf("Curve  : %lf\n", curve);
 
     int r;
     int g;
@@ -112,103 +246,6 @@ void notification::on_screen_changed(const Glib::RefPtr<Gdk::Screen>& previous_s
 }
 
 /**
- * Build the notification bubble
- */
-int notification::build(commandline::interface& cli)
-{
-    std::string title = cli.get("--title");
-    std::string body = cli.get("--body");
-    std::string font = cli.get("--font");
-    std::string titlesize = cli.get("--title-size");
-    std::string bodysize = cli.get("--body-size");
-    std::string background = cli.get("--background");
-    std::string foreground = cli.get("--foreground");
-    std::string opacity = cli.get("--opacity");
-    std::string margin = cli.get("--margin");
-    std::string time = cli.get("--time");
-    std::string width = cli.get("--width");
-    std::string height = cli.get("--height");
-    std::string xpos = cli.get("--xpos");
-    std::string ypos = cli.get("--ypos");
-
-    printf("Before...\n");
-    printf("Title      : %s~\n", title.c_str());
-    printf("Body       : %s~\n", body.c_str());
-    printf("Font       : %s~\n", font.c_str());
-    printf("Title-size : %s~\n", titlesize.c_str());
-    printf("Body-size  : %s~\n", bodysize.c_str());
-    printf("Background : %s~\n", background.c_str());
-    printf("Foreground : %s~\n", foreground.c_str());
-    printf("Opacity    : %s~\n", opacity.c_str());
-    printf("Margin     : %s~\n", margin.c_str());
-    printf("Time       : %s~\n", time.c_str());
-    printf("Width      : %s~\n", width.c_str());
-    printf("Height     : %s~\n", height.c_str());
-    printf("Xpos       : %s~\n", xpos.c_str());
-    printf("Ypos       : %s~\n", ypos.c_str());
-
-    if ((this->set_title(title, font, titlesize) < 0)
-        && (this->set_body(body, font, bodysize) < 0))
-    {
-        printf("Oh no!\n");
-        return 1;
-    }
-    if (this->set_background(background) < 0) {
-        printf("Oh no!\n");
-        return 2;
-    }
-    if (this->set_foreground(foreground) < 0) {
-        printf("Oh no!\n");
-        return 3;
-    }
-    if (this->set_margin(margin) < 0) {
-        return 4;
-    }
-    if (this->set_opacity(opacity) < 0) {
-        return 5;
-    }
-    if (this->set_time(time) < 0) {
-        return 6;
-    }
-    if (this->set_size(width, height) < 0) {
-        return 7;
-    }
-    if (this->set_position(xpos, ypos) < 0) {
-        return 8;
-    }
-
-    printf("\n\nAfter...\n");
-    printf("Title      : %s~\n", title.c_str());
-    printf("Body       : %s~\n", body.c_str());
-    printf("Font       : %s~\n", font.c_str());
-    printf("Title-size : %s~\n", titlesize.c_str());
-    printf("Body-size  : %s~\n", bodysize.c_str());
-    printf("Background : %s~\n", background.c_str());
-    printf("Foreground : %s~\n", foreground.c_str());
-    printf("Opacity    : %s~\n", opacity.c_str());
-    printf("Margin     : %s~\n", margin.c_str());
-    printf("Time       : %s~\n", time.c_str());
-    printf("Width      : %s~\n", width.c_str());
-    printf("Height     : %s~\n", height.c_str());
-    printf("Xpos       : %s~\n", xpos.c_str());
-    printf("Ypos       : %s~\n", ypos.c_str());
-
-    return 0;
-}
-
-/**
- * Display the notification bubble and size it accordingly
- */
-int notification::show(void)
-{
-    this->add(bubble);
-    this->show_all_children();
-    this->resize();
-    this->reposition();
-    return 0;
-}
-
-/**
  * Set the font family, font size, and text for the given notification field.
  */
 int notification::set_text(std::string text, std::string font, std::string size)
@@ -238,7 +275,7 @@ int notification::set_text(std::string text, std::string font, std::string size)
     label->set_markup(text);
     label->set_line_wrap();
     label->override_font(fd);
-    bubble.pack_start(*label, Gtk::PACK_SHRINK);
+    m_text.pack_start(*label, Gtk::PACK_SHRINK);
     return 0;
 }
 
@@ -375,10 +412,10 @@ int notification::set_margin(std::string& margin)
         return -2;
     }
 
-    bubble.set_margin_top(m);
-    bubble.set_margin_bottom(m);
-    bubble.set_margin_start(m);
-    bubble.set_margin_end(m);
+    m_bubble.set_margin_top(m);
+    m_bubble.set_margin_bottom(m);
+    m_bubble.set_margin_start(m);
+    m_bubble.set_margin_end(m);
     return 0;
 }
 
@@ -483,55 +520,6 @@ bool notification::is_hex_color(std::string& color)
         start = 2;
     }
     return (color.find_first_not_of("0123456789ABCDEFabcdef", start) == std::string::npos);
-}
-
-/**
- * Resize the notification bubble to the desired width and height
- */
-int notification::resize(void)
-{
-    int w = this->m_width;
-    int h = this->m_height;
-    int tmp;
-
-    if (!this->m_width) {
-        this->get_size(w, tmp);
-    }
-    if (!this->m_height) {
-        this->get_size(tmp, h);
-    }
-
-    this->set_default_size(w, h);
-    this->m_width = w;
-    this->m_height = h;
-    return 0;
-}
-
-/**
- * Move the notification bubble to the desired position.
- * To-do: Change 1920 to screen width
- */
-int notification::reposition(void)
-{
-    struct SharedMemType data = {.id   = getpid(),
-                                 .time = time(0),
-                                 .x    = this->m_xpos,
-                                 .y    = this->m_ypos,
-                                 .w    = this->m_width,
-                                 .h    = this->m_height};
-    AriaSharedMem::add(&data, 10);
-    data.x = (1920 - data.w) - data.x;
-    this->move(data.x, data.y);
-    return 0;
-}
-
-/**
- * Cleanup any memory mapped data and gracefully shutdown program
- */
-void notification::cleanup(int sig)
-{
-    AriaSharedMem::remove();
-    exit(sig);
 }
 
 ARIA_NAMESPACE_END
