@@ -13,8 +13,8 @@
  */
 
 /* Includes */
-#include "ariadef.hpp"
-#include "ariaconf.hpp"
+#include "aria.hpp"
+#include "config.hpp"
 #include <glib.h>
 #include <iostream>
 #include <string>

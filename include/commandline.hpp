@@ -1,25 +1,13 @@
-/* -----------------------------------------------------------------------------
+/**
+ * @file commandline.hpp
+ * @author Gabriel Gonzalez
  * 
- * Name:    commandline.hpp
- * Author:  Gabriel Gonzalez
- * Email:   gabeg@bu.edu
- * License: The MIT License (MIT)
- * 
- * Syntax: None
- * 
- * Description: Stuff
- * 
- * Notes: None
- * 
- * -----------------------------------------------------------------------------
+ * @brief Command line interface utility.
  */
 
-/* Header guard */
-#ifndef ARIA_COMMAND_LINE_HPP
-#define ARIA_COMMAND_LINE_HPP
+#ifndef COMMAND_LINE_HPP
+#define COMMAND_LINE_HPP
 
-/* Includes */
-#include "ariadef.hpp"
 #include <iostream>
 #include <map>
 #include <memory>
@@ -27,8 +15,6 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-ARIA_NAMESPACE
 
 namespace commandline
 {
@@ -101,6 +87,4 @@ namespace commandline
 
 }
 
-ARIA_NAMESPACE_END
-
-#endif /* ARIA_COMMAND_LINE_HPP */
+#endif /* COMMAND_LINE_HPP */

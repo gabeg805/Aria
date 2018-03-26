@@ -14,15 +14,16 @@
  */
 
 /* Includes */
-#include "arianotification.hpp"
-#include "AriaSharedMem.h"
-#include "ariacommandline.hpp"
-#include "ariaconf.hpp"
+#include "notification.hpp"
+#include "sharedmem.hpp"
+#include "commandline.hpp"
+#include "config.hpp"
 #include <gtkmm.h>
 #include <gdkmm.h>
 #include <time.h>
 #include <unistd.h>
 #include <pangomm/fontdescription.h>
+#include <sys/stat.h>
 #include <cstdlib>
 #include <csignal>
 #include <iostream>
@@ -38,15 +39,14 @@ notification::notification() :
     Gtk::Window(Gtk::WINDOW_POPUP),
     m_bubble(Gtk::ORIENTATION_HORIZONTAL),
     m_icon(Gtk::ORIENTATION_VERTICAL),
-    m_text(Gtk::ORIENTATION_VERTICAL)
+    m_text(Gtk::ORIENTATION_VERTICAL),
+    m_background()
 {
-    this->m_background = "";
-    this->m_opacity = "";
+    this->m_opacity = 0;
     this->m_width = 0;
     this->m_height = 0;
     this->m_xpos = 0;
     this->m_ypos = 0;
-
     this->m_curve = 0;
     this->m_margin_top = 0;
     this->m_margin_bottom = 0;
@@ -74,6 +74,8 @@ int notification::build(commandline::interface& cli)
     std::string font         = cli.get("--font");
     std::string titlesize    = cli.get("--title-size");
     std::string bodysize     = cli.get("--body-size");
+    std::string icon         = cli.get("--icon");
+    std::string spacing      = cli.get("--icon-text-spacing");
     std::string time         = cli.get("--time");
     std::string xpos         = cli.get("--xpos");
     std::string ypos         = cli.get("--ypos");
@@ -92,8 +94,10 @@ int notification::build(commandline::interface& cli)
     if (this->set_notify_title_and_body(title, body, font, titlesize,
                                         bodysize) < 0)
     {
-        printf("AHHHHHH\n");
         return 1;
+    }
+    if (this->set_notify_icon(icon, spacing) < 0) {
+        return 2;
     }
     if (this->set_notify_time(time) < 0) {
         return 2;
@@ -121,13 +125,17 @@ int notification::build(commandline::interface& cli)
 
 /**
  * Display the notification bubble and size it accordingly
- * To-do: Move set_valign elsewhere
  */
 int notification::show(void)
 {
+    this->m_icon.set_halign(Gtk::ALIGN_CENTER);
+    this->m_icon.set_valign(Gtk::ALIGN_CENTER);
+    this->m_text.set_halign(Gtk::ALIGN_CENTER);
     this->m_text.set_valign(Gtk::ALIGN_CENTER);
-    // m_bubble.pack_start(this->m_icon);
-    m_bubble.pack_start(this->m_text);
+    this->m_bubble.set_halign(Gtk::ALIGN_CENTER);
+    this->m_bubble.set_valign(Gtk::ALIGN_CENTER);
+    this->m_bubble.pack_start(this->m_icon);
+    this->m_bubble.pack_start(this->m_text);
     this->add(this->m_bubble);
     this->show_all_children();
     this->resize();
@@ -137,19 +145,17 @@ int notification::show(void)
 
 /**
  * Resize the notification bubble to the desired width and height
- * To-do: Add curve to padding
  */
 int notification::resize(void)
 {
-    const int padding = 10;
     int junk;
     if (!this->m_width) {
         this->m_bubble.get_preferred_width(junk, this->m_width);
-        this->m_width += padding;
+        this->m_width += this->m_curve;
     }
     if (!this->m_height) {
         this->m_bubble.get_preferred_height(junk, this->m_height);
-        this->m_height += padding;
+        this->m_height += this->m_curve;
     }
     this->set_size_request(this->m_width, this->m_height);
     return 0;
@@ -182,6 +188,7 @@ int notification::set_notify_title_and_body(std::string& title,
                                             std::string& titlesize,
                                             std::string& bodysize)
 {
+    int tstatus, bstatus;
     if (this->set_font(font) < 0) {
         return -1;
     }
@@ -191,8 +198,9 @@ int notification::set_notify_title_and_body(std::string& title,
     if (this->set_body_size(bodysize) < 0) {
         return -3;
     }
-    if ((this->set_title(title, font, titlesize) < 0)
-        && (this->set_body(body, font, bodysize) < 0))
+    tstatus = this->set_title(title, font, titlesize);
+    bstatus = this->set_body(body, font, bodysize);
+    if ((tstatus < 0) && (bstatus < 0))
     {
         return -4;
     }
@@ -230,7 +238,7 @@ int notification::set_text(std::string text, std::string font, std::string size)
         return -3;
     }
 
-    Gtk::Label *label = Gtk::manage(new Gtk::Label());
+    Gtk::Label* label = Gtk::manage(new Gtk::Label());
     Pango::FontDescription fd;
     fd.set_family(font);
     fd.set_size(std::stoi(size) * PANGO_SCALE);
@@ -245,7 +253,8 @@ int notification::set_text(std::string text, std::string font, std::string size)
     label->set_markup(text);
     label->set_line_wrap();
     label->override_font(fd);
-    m_text.pack_start(*label, Gtk::PACK_SHRINK);
+    label->set_halign(Gtk::ALIGN_START);
+    this->m_text.pack_start(*label, Gtk::PACK_SHRINK);
 
     return 0;
 }
@@ -283,6 +292,35 @@ int notification::set_font_size(const std::string key, std::string& size)
         return -1;
     }
     return (size.empty()) ? this->set_from_config((key+"-size").c_str(), size) : 0;
+}
+
+/**
+ * Set notification bubble icon.
+ */
+int notification::set_notify_icon(std::string& path, std::string& spacing)
+{
+    struct stat statbuf;
+    int s;
+    if (path.empty()) {
+        return 0;
+    }
+    if (stat(path.c_str(), &statbuf) != 0) {
+        return -1;
+    }
+    if (spacing.empty() && (this->set_from_config("icon-text-spacing",
+                                                  spacing) < 0))
+    {
+        spacing = "0";
+    }
+    if ((s=std::stoi(spacing)) < 0) {
+        return -2;
+    }
+
+    Gtk::Image* icon = Gtk::manage(new Gtk::Image(path));
+    this->m_icon.pack_start(*icon, Gtk::PACK_SHRINK);
+    this->m_bubble.set_spacing(s);
+
+    return 0;
 }
 
 /**
@@ -339,10 +377,6 @@ int notification::set_notify_color(std::string& background,
                                    std::string& foreground,
                                    std::string& opacity)
 {
-    printf("Background : %s\n", background.c_str());
-    printf("Foreground : %s\n", foreground.c_str());
-    printf("Opacity    : %s\n", opacity.c_str());
-
     if (this->set_background(background) < 0) {
         return -1;
     }
@@ -376,18 +410,19 @@ int notification::set_foreground(std::string& color)
  */
 int notification::set_color(const std::string key, std::string& color)
 {
+    auto flag = Gtk::STATE_FLAG_NORMAL;
     if (color.empty() && (this->set_from_config(key, color) < 0)) {
         return -1;
     }
     color = this->fix_color(color);
 
-    Gdk::RGBA attr(color);
     if (key == "background") {
-        this->m_background = color;
-        this->override_background_color(attr, Gtk::STATE_FLAG_NORMAL);
+        this->m_background.set(color);
+        this->override_background_color(this->m_background, flag);
     }
     else if (key == "foreground") {
-        this->override_color(attr, Gtk::STATE_FLAG_NORMAL);
+        Gdk::RGBA rgba(color);
+        this->override_color(rgba, flag);
     }
     else {
         return -2;
@@ -397,14 +432,18 @@ int notification::set_color(const std::string key, std::string& color)
 
 /**
  * Set opacity of window
- * To-do: Check if input is int or double
  */
 int notification::set_opacity(std::string& opacity)
 {
     if (opacity.empty() && (this->set_from_config("opacity", opacity) < 0)) {
         return -1;
     }
-    this->m_opacity = opacity;
+    double o = std::stod(opacity);
+    int i = (int)o;
+    if ((i != 0) && (i != 1)) {
+        return -2;
+    }
+    this->m_opacity = o;
     // Gtk::Window::set_opacity(std::stod(opacity));
     return 0;
 }
@@ -464,10 +503,11 @@ int notification::set_notify_margin(std::string& margin, std::string& mtop,
         }
     }
 
-    m_bubble.set_margin_top(mt);
-    m_bubble.set_margin_bottom(mb);
-    m_bubble.set_margin_start(ml);
-    m_bubble.set_margin_end(mr);
+    this->m_bubble.set_margin_top(mt);
+    this->m_bubble.set_margin_bottom(mb);
+    this->m_bubble.set_margin_start(ml);
+    this->m_bubble.set_margin_end(mr);
+
     return 0;
 }
 
@@ -507,14 +547,14 @@ std::string notification::fix_color(std::string& color)
  */
 bool notification::is_hex_color(std::string& color)
 {
+    int start;
     if (color[0] == '#') {
         return true;
     }
     if (color.length() != 6) {
         return false;
     }
-
-    int start = 0;
+    start = 0;
     if ((color.substr(0, 2) == "0x") || (color.substr(0, 2) == "0X")) {
         start = 2;
     }
@@ -538,23 +578,14 @@ void notification::cleanup(int sig)
 bool notification::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 {
     Glib::RefPtr<Gdk::Screen> screen = this->get_screen();
-    double curve = 20;
-    double width = this->m_width;
+    double width  = this->m_width;
     double height = this->m_height;
-    double deg = M_PI / 180.0;
-
-    printf("Width  : %lf\n", width);
-    printf("Height : %lf\n", height);
-    printf("Curve  : %lf\n", curve);
-    printf("Back   : %s\n", this->m_background.c_str());
-
-    int r;
-    int g;
-    int b;
-    std::istringstream(this->m_background.substr(1, 2)) >> std::hex >> r;
-    std::istringstream(this->m_background.substr(3, 2)) >> std::hex >> g;
-    std::istringstream(this->m_background.substr(5, 2)) >> std::hex >> b;
-
+    double curve  = this->m_curve;
+    double deg    = M_PI / 180.0;
+    double red    = this->m_background.get_red();
+    double green  = this->m_background.get_green();
+    double blue   = this->m_background.get_blue();
+    double alpha  = this->m_opacity;
     cr->save();
     cr->set_line_width(0);
     cr->begin_new_path();
@@ -564,13 +595,12 @@ bool notification::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     cr->arc(curve,       curve,        curve, 180*deg, 270*deg);
     cr->close_path();
     if (screen->is_composited()) {
-        cr->set_source_rgba(r/255.0, g/255.0, b/255.0, 0.5);
+        cr->set_source_rgba(red, green, blue, alpha);
     } else {
-        cr->set_source_rgb(r/255.0, g/255.0, b/255.0);
+        cr->set_source_rgb(red, green, blue);
     }
     cr->fill_preserve();
     cr->stroke();
-
     return Gtk::Window::on_draw(cr);
 }
 

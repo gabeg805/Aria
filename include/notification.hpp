@@ -1,4 +1,4 @@
-/* *****************************************************************************
+/* -----------------------------------------------------------------------------
  * 
  * Name:    arianotification.h
  * Class:   <arianotification>
@@ -10,7 +10,7 @@
  * 
  * Notes: None.
  * 
- * *****************************************************************************
+ * -----------------------------------------------------------------------------
  */
 
 /* Header guard */
@@ -18,8 +18,8 @@
 #define ARIA_NOTIFICATION_HPP
 
 /* Includes */
-#include "ariadef.hpp"
-#include "ariacommandline.hpp"
+#include "aria.hpp"
+#include "commandline.hpp"
 #include <gtkmm.h>
 #include <string>
 
@@ -38,6 +38,7 @@ public:
     int set_notify_title_and_body(std::string& title, std::string& body,
                                   std::string& font, std::string& titlesize,
                                   std::string& bodysize);
+    int set_notify_icon(std::string& path, std::string& spacing);
     int set_notify_time(std::string& time);
     int set_notify_size(std::string& width, std::string& height);
     int set_notify_position(std::string& xpos, std::string& ypos);
@@ -64,7 +65,6 @@ protected:
     int set_from_config(const std::string key, std::string& value);
     std::string fix_color(std::string& color);
     bool is_hex_color(std::string& color);
-
     virtual bool on_draw(const ::Cairo::RefPtr< ::Cairo::Context>& cr);
     void on_screen_changed(const Glib::RefPtr<Gdk::Screen>& previous_screen);
 
@@ -74,10 +74,8 @@ private:
     Gtk::Box m_bubble;
     Gtk::Box m_icon;
     Gtk::Box m_text;
-    std::string m_background;
-
-    std::string m_opacity;
-
+    Gdk::RGBA m_background;
+    double m_opacity;
     int m_width;
     int m_height;
     int m_xpos;

@@ -18,7 +18,7 @@ CC      = g++
 CPPFLAGS  = -g -Wall -std=c++14 $(DEFINES)
 LIBS    = -lX11 -I $(INCDIR) `pkg-config $(PKGS) --cflags --libs`
 PKGS    = gtkmm-3.0
-DEFINES = -DARIA_CONFIG_FILE="\"$(SHAREDIR)/$(PROJECT).conf\""
+DEFINES = -DPROGRAM="\"$(PROJECT)\"" -DARIA_CONFIG_FILE="\"$(SHAREDIR)/$(PROJECT).conf\""
 
 # ------------------------------------------------------------------------------
 # Files

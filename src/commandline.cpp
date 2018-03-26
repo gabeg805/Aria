@@ -1,32 +1,21 @@
-/* -----------------------------------------------------------------------------
+/**
+ * @file commandline.cpp
+ * @author Gabriel Gonzalez
  * 
- * Name:    ariacommandline.h
- * Class:   <commandline>
- * Author:  Gabriel Gonzalez
- * Email:   gabeg@bu.edu
- * License: The MIT License (MIT)
+ * A command line interface utility to parse options, print usage, and notify
+ * the user when an error occurs.
  * 
- * Syntax: None
- * 
- * Description: Command line parser.
- * 
- * Notes: None
- * 
- * -----------------------------------------------------------------------------
+ * @note This utility expects "PROGRAM" to be #define-d, so that printing the
+ *       program usage and displaying any errors works as expected.
  */
 
-/* Includes */
-#include "ariacommandline.hpp"
-#include "ariadef.hpp"
-#include "ariaconf.hpp"
+#include "commandline.hpp"
 #include <algorithm>
 #include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
 #include <cstdio>
-
-ARIA_NAMESPACE
 
 namespace commandline
 {
@@ -328,5 +317,3 @@ namespace commandline
     }
 
 }
-
-ARIA_NAMESPACE_END

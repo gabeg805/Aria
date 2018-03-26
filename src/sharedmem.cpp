@@ -14,7 +14,7 @@
  */
 
 /* Includes */
-#include "AriaSharedMem.h"
+#include "sharedmem.hpp"
 #include <stdint.h>
 #include <fcntl.h>
 #include <unistd.h>

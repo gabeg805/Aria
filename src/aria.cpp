@@ -1,50 +1,43 @@
-/*!
- * \mainpage Aria Notification Bubble
+/**
+ * @file aria.cpp
+ * @author Gabriel Gonzalez
  * 
- * \section intro_sec Introduction
+ * @section LICENSE
  * 
- * A gtkmm based C++ notification bubble that is designed to be highly
- * configurable, with the user able to customize the location it is displayed,
- * font, text size, background color, foreground color, and more.
+ * See LICENSE file.
  * 
- * \section install_sec Installation
+ * @section DESCRIPTION
  * 
- * Step 1: Run '$ make' to build the program.
+ * The Aria notification bubble is a highly customizable program wherein a user
+ * is able to configure settings such as:
+ *   - Title and body
+ *   - Font
+ *   - Font size for the title and body
+ *   - Icon
+ *   - Amount of time to display the notification
+ *   - X and Y-position on the screen
+ *   - Width and height of the notification bubble
+ *   - Background and foreground color
+ *   - Opacity of the notification bubble
+ *   - Curvature of the corners of the notification bubble
+ *   - Margin (top, bottom, left and right)
+ *   - Spacing between the icon and the text
  * 
- * Step 2: Run '$ make test' to test out basic functionality.
- * 
- * Step 3: Run '$ ./aria --help' for more information on the program.
+ * Much of the above settings are defined in the configuration and, as a result,
+ * do not need to be specified.
  */
 
-/* -----------------------------------------------------------------------------
- *  
- * Name:    aria.cc
- * Class:   main()
- * Author:  Gabriel Gonzalez
- * Email:   gabeg@bu.edu
- * License: The MIT License (MIT)
- * 
- * Syntax: aria [option] [--title <title>] [--body <body>]
- * 
- * Description: Creates the Aria Notification Bubble.
- * 
- * Notes: None.
- * 
- * -----------------------------------------------------------------------------
- */
-
-/* Includes */
-#include "arianotification.hpp"
-#include "ariacommandline.hpp"
+#include "commandline.hpp"
+#include "notification.hpp"
 #include <gtkmm.h>
-#include <iostream>
-#include <memory>
-#include <string>
-#include <vector>
 
 using namespace aria;
 
-/* Create and display the Aria statusbar */
+/**
+ * Create and display the Aria notification bubble.
+ * 
+ * @return Return 0 on success and any other value is an error state.
+ */
 int main(int argc, char** argv)
 {
     /* Command line options */
@@ -52,6 +45,7 @@ int main(int argc, char** argv)
         {"-h",  "--help",          "",        commandline::no_argument,       "Print program usage."},
         {"-t",  "--title",         "title",   commandline::required_argument, "Title of the notification."},
         {"-b",  "--body",          "body",    commandline::required_argument, "Body of the notification."},
+        {"-i",  "--icon",          "path",    commandline::required_argument, "Icon to display next to the text."},
         {"-T",  "--time",          "time",    commandline::required_argument, "Amount of time to display the notification. [Default: 2s]"},
         {"-X",  "--xpos",          "pos",     commandline::required_argument, "X-coordinate of where to put the notification on the screen."},
         {"-Y",  "--ypos",          "pos",     commandline::required_argument, "Y-coordinate of where to put the notification on the screen."},
@@ -66,6 +60,7 @@ int main(int argc, char** argv)
         {"-mb", "--margin-bottom", "margin",  commandline::required_argument, "Bottom margin of the notification."},
         {"-ml", "--margin-left",   "margin",  commandline::required_argument, "Left margin of the notification."},
         {"-mr", "--margin-right",  "margin",  commandline::required_argument, "Right margin of the notification."},
+        {"-s",  "--icon-text-spacing", "spacing", commandline::required_argument, "Spacing between the icon and notification bubble text."},
         {"-f",  "--font",          "font",    commandline::required_argument, "Font to display text in. [Default: Dejavu Sans]"},
         {"-ts", "--title-size",    "size",    commandline::required_argument, "Size of title text. [Default: 16]"},
         {"-bs", "--body-size",     "size",    commandline::required_argument, "Size of body text. [Default: 12]"},
@@ -79,12 +74,12 @@ int main(int argc, char** argv)
     Glib::RefPtr<Gtk::Application> app = Gtk::Application::create("");
     aria::notification Aria;
     int status;
-
     if ((status=Aria.build(cli)) != 0) {
         return status;
     }
     if ((status=Aria.show()) != 0) {
         return status;
     }
+
     return app->run(Aria);
 }
