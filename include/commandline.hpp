@@ -2,59 +2,116 @@
  * @file commandline.hpp
  * @author Gabriel Gonzalez
  * 
- * @brief Command line interface utility.
+ * @bug It looks like the list argument can act as an optional argument as well.
+ * 
+ * @brief A command line interface utility to parse options, print usage, and
+ *        notify the user when an error occurs.
  */
 
 #ifndef COMMAND_LINE_HPP
 #define COMMAND_LINE_HPP
 
-#include <iostream>
-#include <map>
-#include <memory>
 #include <string>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
+/**
+ * @namespace commandline
+ * 
+ * @brief Command line interface utility.
+ */
 namespace commandline
 {
-    /* Argument type */
+    const size_t kArgumentNameLength = 32;
+
+    /**
+     * @enum The type of argument for an option.
+     */
     enum argument_t
     {
-        no_argument,
-        required_argument,
-        optional_argument,
-        list_argument
+        no_argument,       /** No argument. */
+        required_argument, /** One required argument after an option. */
+        optional_argument, /** An optional argument after an option. */
+        list_argument      /** One or more arguments after an option. */
     };
 
-    /* Option information */
-    typedef struct option option_t;
-
+    /**
+     * @struct option
+     * 
+     * @brief A structure containing all the information one needs to know about
+     *        an option.
+     * 
+     * @details All the information about an option, such as: the short form,
+     *          long form, argument name, argument type, and a description of
+     *          the option.
+     */
     struct option
     {
-        std::string shortopt;
-        std::string longopt;
-        std::string name;
-        argument_t  argument;
-        std::string desc;
+        std::string shortopt; /** Short form of the option. */
+        std::string longopt;  /** Long form of the option. */
+        std::string name;     /** Name of the argument. */
+        argument_t  argument; /** Type of argument. */
+        std::string desc;     /** Description of the option. */
     };
 
-    /* List of all possible options */
+    /**
+     * @brief Type name for an option.
+     */
+    typedef struct option option_t;
+
+    /**
+     * @brief Type name for a list of all options in a program.
+     */
     typedef std::vector<option_t> optlist_t;
 
-    /* List of all entered options and their values */
+    /**
+     * @brief Type name for list of all entered options and their respective
+     *        values.
+     */
     typedef std::unordered_map<std::string, std::vector<std::string>> keyval_t;
 
-    /* Command line interface */
+    /**
+     * @class interface
+     * 
+     * @brief Interface to the command line, where a user will parse, print
+     *        program usage, etc.
+     */
     class interface
     {
     public:
+        /**
+         * @brief Construct the command line interface.
+         * 
+         * @param[in] options List of all command line options for the program.
+         */
         explicit interface(const optlist_t options);
 
+        /**
+         * @brief Print the program usage message.
+         */
         void usage(void);
+
+        /**
+         * @brief Parse the list of arguments given on the command line.
+         * 
+         * @param[in] argv List of command line arguments (from main function).
+         */
         void parse(char** argv);
+
+        /**
+         * @brief Print the command line options that have been entered.
+         */
         void print(void);
-        void set(std::string key, std::string value);
+
+        /**
+         * @brief Set the value for the given option.
+         * 
+         * @param opt   An option who's value to set.
+         * @param value The value to set for the given option.
+         */
+        int set(std::string opt, std::string value);
+
+
         std::string get(std::string opt);
         bool has(std::string opt);
 
@@ -67,6 +124,7 @@ namespace commandline
         std::string extract_value(std::string opt);
         std::string to_short_option(std::string opt);
         std::string to_long_option(std::string opt);
+        std::string to_key(std::string input);
         bool is_option(std::string opt);
         bool is_option(const option_t* option, std::string opt);
         bool is_short_option(std::string opt);

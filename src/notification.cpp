@@ -69,27 +69,27 @@ notification::notification() :
  */
 int notification::build(commandline::interface& cli)
 {
-    std::string title        = cli.get("--title");
-    std::string body         = cli.get("--body");
-    std::string font         = cli.get("--font");
-    std::string titlesize    = cli.get("--title-size");
-    std::string bodysize     = cli.get("--body-size");
-    std::string icon         = cli.get("--icon");
-    std::string spacing      = cli.get("--icon-text-spacing");
-    std::string time         = cli.get("--time");
-    std::string xpos         = cli.get("--xpos");
-    std::string ypos         = cli.get("--ypos");
-    std::string width        = cli.get("--width");
-    std::string height       = cli.get("--height");
-    std::string background   = cli.get("--background");
-    std::string foreground   = cli.get("--foreground");
-    std::string opacity      = cli.get("--opacity");
-    std::string curve        = cli.get("--curve");
-    std::string margin       = cli.get("--margin");
-    std::string margintop    = cli.get("--margin-top");
-    std::string marginbottom = cli.get("--margin-bottom");
-    std::string marginleft   = cli.get("--margin-left");
-    std::string marginright  = cli.get("--margin-right");
+    std::string title        = cli.get("title");
+    std::string body         = cli.get("body");
+    std::string font         = cli.get("font");
+    std::string titlesize    = cli.get("title-size");
+    std::string bodysize     = cli.get("body-size");
+    std::string icon         = cli.get("icon");
+    std::string spacing      = cli.get("icon-text-spacing");
+    std::string time         = cli.get("time");
+    std::string xpos         = cli.get("xpos");
+    std::string ypos         = cli.get("ypos");
+    std::string width        = cli.get("width");
+    std::string height       = cli.get("height");
+    std::string background   = cli.get("background");
+    std::string foreground   = cli.get("foreground");
+    std::string opacity      = cli.get("opacity");
+    std::string curve        = cli.get("curve");
+    std::string margin       = cli.get("margin");
+    std::string margintop    = cli.get("margin-top");
+    std::string marginbottom = cli.get("margin-bottom");
+    std::string marginleft   = cli.get("margin-left");
+    std::string marginright  = cli.get("margin-right");
 
     if (this->set_notify_title_and_body(title, body, font, titlesize,
                                         bodysize) < 0)

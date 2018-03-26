@@ -2,8 +2,8 @@
  * @file commandline.cpp
  * @author Gabriel Gonzalez
  * 
- * A command line interface utility to parse options, print usage, and notify
- * the user when an error occurs.
+ * @brief A command line interface utility to parse options, print usage, and
+ *        notify the user when an error occurs.
  * 
  * @note This utility expects "PROGRAM" to be #define-d, so that printing the
  *       program usage and displaying any errors works as expected.
@@ -19,74 +19,97 @@
 
 namespace commandline
 {
+    /**
+     * @brief Construct the command line interface.
+     * 
+     * @details Initialize the member variable m_options with the input
+     *          parameter.
+     * 
+     * @param[in] options List of all command line options for the program.
+     */
     interface::interface(const optlist_t options) : m_options(options)
     {
     }
 
     /**
-     * Print program usage
+     * @brief Print the program usage message.
      */
     void interface::usage(void)
     {
         printf("Usage: %s [option]...\n\n", PROGRAM);
         printf("Options:");
-        char arg[32];
+        char arg[commandline::kArgumentNameLength];
 
-        for (option_t opt : this->m_options) {
-            if (opt.name.empty()) {
+        for (option_t opt : this->m_options)
+        {
+            if (opt.name.empty())
+            {
                 arg[0] = '\0';
             }
-            else {
+            else
+            {
                 snprintf(arg, sizeof(arg), "=<%s>", opt.name.c_str());
             }
             printf("\n    %s, %s%s\n", opt.shortopt.c_str(),
                    opt.longopt.c_str(), arg);
             printf("        %s\n", opt.desc.c_str());
         }
-        return;
     }
 
     /**
-     * Parse command line options
+     * @brief Parse the list of arguments given on the command line.
+     * 
+     * @details Iterate over the argument list. Check if the current arg has a
+     *          list_argument type, and if it is, store each argument.
+     *          Otherwise, the current arg either has a type which takes 0 or 1
+     *          argument. Store the argument, if present, and increment the
+     *          argument list vector by the proper amount.
+     * 
+     * @param[in] argv List of command line arguments (from main function).
      */
     void interface::parse(char** argv)
     {
-        char** arg = argv+1;
-        std::string key = *arg;
+        char**          arg      = argv+1;
+        std::string     key      = *arg;
+        bool            listflag = false;
         const option_t* option;
-        bool listflag = false;
 
-        for ( ; *arg != NULL; ++arg) {
-            if (this->parse_list_argument(arg, key, listflag)) {
+        for ( ; *arg != NULL; ++arg)
+        {
+            if (this->parse_list_argument(arg, key, listflag))
+            {
                 continue;
             }
-
             key = *arg;
-            option = this->find_option(key);
-            if (!option) {
-                fprintf(stderr, "%s: Invalid option '%s'\n", PROGRAM, key.c_str());
+            if (!(option=this->find_option(key)))
+            {
+                fprintf(stderr, "%s: Invalid option '%s'\n", PROGRAM,
+                        key.c_str());
                 exit(1);
             }
-
             arg = this->parse_argument(option, arg, listflag);
         }
     }
 
     /**
-     * Print given command line options
+     * @brief Print the command line options that have been entered.
      */
     void interface::print(void)
     {
         int i;
-        for (auto it : this->m_table) {
+        for (auto it : this->m_table)
+        {
             printf("%s: ", it.first.c_str());
-            if (it.second.empty()) {
+            if (it.second.empty())
+            {
                 printf("\n");
                 continue;
             }
             i = 0;
-            for (auto a : it.second) {
-                if (i > 0) {
+            for (auto a : it.second)
+            {
+                if (i > 0)
+                {
                     printf(", ");
                 }
                 printf("%s", a.c_str());
@@ -95,28 +118,47 @@ namespace commandline
             printf("\n");
         }
     }
+
     /**
-     * Set the value for the given option
+     * @brief Set the value for the given option.
+     * 
+     * @param[in] opt   An option entered in the command line.
+     * @param[in] value The value to set for the given option.
+     * 
+     * @return 0 on success, -1 on error.
      */
-    void interface::set(std::string key, std::string value)
+    int interface::set(std::string opt, std::string value)
     {
-        this->m_table[this->to_long_option(key)].push_back(value);
+        std::string key = this->to_key(opt);
+        if (key.empty())
+        {
+            return -1;
+        }
+        this->m_table[key].push_back(value);
+        return 0;
     }
 
     /**
-     * Return the value for the given option
+     * @brief Retrieve the value for the given option.
+     * 
+     * @details Check if the input option has been specified on the command
+     *          line, and if so, return the value. Otherwise, return an empty string.
+     * 
+     * @param[in] opt An option entered in the command line.
      */
     std::string interface::get(std::string opt)
     {
-        return (this->has(opt)) ? this->m_table[this->to_long_option(opt)].at(0) : "";
+        return (this->has(opt)) ? this->m_table[this->to_key(opt)].at(0) : "";
     }
 
     /**
-     * Check if the given option was entered
+     * @brief Check if the given option was entered on the command line.
+     * 
+     * @param[in] opt An option entered in the command line.
      */
     bool interface::has(std::string opt)
     {
-        return (this->m_table.find(this->to_long_option(opt)) != this->m_table.end());
+        return (this->m_table.find(this->to_key(opt)) != this->m_table.end());
     }
 
     /**
@@ -264,6 +306,50 @@ namespace commandline
             return "";
         }
         return option->longopt;
+    }
+
+    /**
+     * @brief Convert input option to a key string.
+     * 
+     * Check if the input string has any dashes in front. If not, try long
+     * option dashes first, and if that doesn't work, resort to the short
+     * option dash. Find the corresponding option struct, strip the leading
+     * dash(es) and return the key.
+     * 
+     * The key will be used in m_table, and will have a corresponding value
+     * pair. By default, the long option is used as the key, without the leading
+     * dashes. However, if there is no long option, the short option is used,
+     * also without the leading dash.
+     */
+    std::string interface::to_key(std::string input)
+    {
+        const option_t* option = NULL;
+        std::string opt;
+        if (input[0] != '-')
+        {
+            input.insert(0, "--");
+            if (!(option=this->find_option(input)))
+            {
+                input.erase(0, 1);
+            }
+        }
+        if (!option && !(option=this->find_option(input)))
+        {
+            return "";
+        }
+        if (!option->longopt.empty())
+        {
+            opt = option->longopt.substr(2);
+        }
+        else if (!option->shortopt.empty())
+        {
+            opt = option->shortopt.substr(1);
+        }
+        else
+        {
+            return "";
+        }
+        return opt;
     }
 
     /**
