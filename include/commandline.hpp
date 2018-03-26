@@ -37,13 +37,6 @@ namespace commandline
         std::string name;
         argument_t  argument;
         std::string desc;
-
-        bool operator== (const option_t& opt) {
-            return ((opt.shortopt == this->shortopt)
-                    && (opt.longopt == this->longopt)
-                    && (opt.name == this->name)
-                    && (opt.argument == this->argument));
-        }
     };
 
     /* List of all possible options */
