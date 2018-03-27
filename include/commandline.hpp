@@ -1,9 +1,11 @@
 /**
+ * -----------------------------------------------------------------------------
  * @file commandline.hpp
  * @author Gabriel Gonzalez
  * 
  * @brief A command line interface utility to parse options, print usage, and
  *        notify the user when an error occurs.
+ * -----------------------------------------------------------------------------
  */
 
 #ifndef COMMAND_LINE_HPP
@@ -20,6 +22,10 @@
  */
 namespace commandline
 {
+    /**
+     * @brief Maximum length of an argument name, when printing out program
+     *         usage.
+     */
     const size_t kArgumentNameLength = 32;
 
     /**
@@ -253,7 +259,22 @@ namespace commandline
          */
         bool is_long_option(const option_t* option, std::string opt);
 
+        /**
+         * @brief List of all possible options that can be supplied to the
+         *        program.
+         */
         const optlist_t m_options;
+
+        /**
+         * @brief A perfect hash table containing the options that were supplied
+         *        in the command line, and their corresponding values.
+
+         * @details The keys for this hash table are the option strings that are
+         *          supplied, e.g. '--long-option' or '-short', but without the
+         *          leading dash(es). Long options are used as the default key,
+         *          but if no long option exists, it falls back to the short
+         *          option.
+         */
         keyval_t m_table;
     };
 
