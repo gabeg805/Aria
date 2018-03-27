@@ -2,6 +2,11 @@
  * @file commandline.cpp
  * @author Gabriel Gonzalez
  * 
+ * @note Test optional and list argument type.  It looks like the list argument
+ *       can act as an optional argument as well.
+ * @note Check if when checking for long option and finding long option, it
+ *       compares only the stuff before the equals.
+ * 
  * @brief A command line interface utility to parse options, print usage, and
  *        notify the user when an error occurs.
  * 
@@ -145,6 +150,9 @@ namespace commandline
      *          line, and if so, return the value. Otherwise, return an empty string.
      * 
      * @param[in] opt An option entered in the command line.
+     * 
+     * @return The value in the hash table pertaining to the given key, if
+     *         successful. Otherwise, return an empty string.
      */
     std::string interface::get(std::string opt)
     {
@@ -152,9 +160,11 @@ namespace commandline
     }
 
     /**
-     * @brief Check if the given option was entered on the command line.
+     * @brief Check if the given option has been entered on the command line.
      * 
      * @param[in] opt An option entered in the command line.
+     * 
+     * @return True if the option is found in the hash table, false otherwise.
      */
     bool interface::has(std::string opt)
     {
@@ -162,14 +172,29 @@ namespace commandline
     }
 
     /**
-     * Parse argument and populate the value
-     * To-do: Test optional and list argument
+     * @brief Determine the argument type and, depending on the type, store the
+     *        corresponding value.
+     * 
+     * @details There is some logic in here for unique cases. For instances, if
+     *          the long option '--help' is found, call usage(). In the event
+     *          that a list argument is found, set the flag to be true and
+     *          return the current argument pointer. Otherwise, set the value
+     *          for the current key, if there is a value, and increment the
+     *          argument pointer.
+     * 
+     * @param[in]     option   Data structure for an option.
+     * @param[in]     arg      Argument list pointer, pointing to the current
+     *                         command line option.
+     * @param[in/out] listflag Used to set the list flag if a list argument is
+     *                         found.
+     * 
+     * @return The pointer to the current argument in the argument list. NULL if
+     *         an error occurs.
      */
     char** interface::parse_argument(const option_t* option, char** arg, bool& listflag)
     {
         std::string key = *arg;
         std::string value;
-
         if (!option) {
             return NULL;
         }
@@ -209,7 +234,20 @@ namespace commandline
     }
 
     /**
-     * Parse list argument and populate all its values
+     * @brief Check if there is a list argument, and if there is, store the
+     *        argument(s).
+     * 
+     * @details This function is meant to be called multiple times on different
+     *          points of the argument list pointer.
+     * 
+     * @param[in      arg      Argument list pointer, pointing to the current
+     *                         argument.
+     * @param[in      key      The key used to set a value in m_table.
+     * @param[in/out] listflag A flag indicating if the previously found option
+     *                         contains list type arguments.
+     * 
+     * @return True if the previously found option has a list argument
+     *         type. Otherwise, return False.
      */
     bool interface::parse_list_argument(char** arg, std::string key, bool& listflag)
     {
@@ -225,7 +263,15 @@ namespace commandline
     }
 
     /**
-     * Find option in valid command line options
+     * @brief Find an option struct that matches the given option string.
+     * 
+     * @details Searches the options list, containing all possible options, and
+     *          if the short or long options match, return the struct.
+     * 
+     * @param[in] opt The option string to search for.
+     * 
+     * @return The option struct if the option string is found. Otherwise,
+     *         return NULL.
      */
     const option_t* interface::find_option(std::string opt)
     {
@@ -242,7 +288,18 @@ namespace commandline
     }
 
     /**
-     * Extract field from long option
+     * @brief Extract either the option or value from a long option string.
+     *        
+     * 
+     * @param[in] opt   The long option string of the form
+     *                  '--long-option=value'.
+     * @param[in] field A field of 1 means the '--long-option' section and a
+     *                  field of 2 means the 'value' section.
+     * 
+     * @return The substring requested by the user. If field is an improper
+     *         value, return an empty string. If the length of the string is
+     *         iterated over and no '=' is found, return the given option
+     *         string.
      */
     std::string interface::extract(std::string opt, int field)
     {
@@ -269,7 +326,11 @@ namespace commandline
     }
 
     /**
-     * Extract option field from long option
+     * @brief Extract the long option section from a long option string.
+     * 
+     * @param[in] opt The long option string.
+     * 
+     * @return See extract().
      */
     std::string interface::extract_option(std::string opt)
     {
@@ -277,7 +338,11 @@ namespace commandline
     }
 
     /**
-     * Extract value field from long option
+     * @brief Extract the value section from a long option string.
+     * 
+     * @param[in] opt The long option string.
+     * 
+     * @return See extract().
      */
     std::string interface::extract_value(std::string opt)
     {
@@ -285,7 +350,15 @@ namespace commandline
     }
 
     /**
-     * Convert long option to short option
+     * @brief Convert an option string, long or short, to a short option.
+     * 
+     * @details Find an option struct that matches the option string, and from
+     *          there, return the short option.
+     * 
+     * @param[in] opt An option string.
+     * 
+     * @return The short option if it is found. Otherwise, return an empty
+     *         string.
      */
     std::string interface::to_short_option(std::string opt)
     {
@@ -297,7 +370,15 @@ namespace commandline
     }
 
     /**
-     * Convert short option to long option
+     * @brief Convert an option string, long or short, to a long option.
+     * 
+     * @details Find an option struct that matches the option string, and from
+     *          there, return the long option.
+     * 
+     * @param[in] opt An option string.
+     * 
+     * @return The long option if it is found. Otherwise, return an empty
+     *         string.
      */
     std::string interface::to_long_option(std::string opt)
     {
@@ -309,17 +390,23 @@ namespace commandline
     }
 
     /**
-     * @brief Convert input option to a key string.
+     * @brief Convert input option to a key string. This means '--long-option'
+     *        is converted to 'long-option' and if there is no long option, then
+     *        '-short' is converted to 'short'.
      * 
-     * Check if the input string has any dashes in front. If not, try long
-     * option dashes first, and if that doesn't work, resort to the short
-     * option dash. Find the corresponding option struct, strip the leading
-     * dash(es) and return the key.
+     * @details Check if the input string has any dashes in front. If not, try
+     *          long option dashes first, and if that doesn't work, resort to
+     *          the short option dash. Find the corresponding option struct,
+     *          strip the leading dash(es) and return the key.
      * 
-     * The key will be used in m_table, and will have a corresponding value
-     * pair. By default, the long option is used as the key, without the leading
-     * dashes. However, if there is no long option, the short option is used,
-     * also without the leading dash.
+     *          The key will be used in m_table, and will have a corresponding
+     *          value pair. By default, the long option is used as the key,
+     *          without the leading dashes. However, if there is no long option,
+     *          the short option is used, also without the leading dash.
+     * 
+     * @param[in] input The option string to convert a key.
+     * 
+     * @return The key. Otherwise, return an empty string.
      */
     std::string interface::to_key(std::string input)
     {
@@ -353,7 +440,12 @@ namespace commandline
     }
 
     /**
-     * Check if the given option is a valid short or long command line option
+     * @brief Check if the given option is a valid short or long command line
+     *        option.
+     * 
+     * @param[in] opt An option string.
+     * 
+     * @return True if the input is an option. False, otherwise.
      */
     bool interface::is_option(std::string opt)
     {
@@ -361,7 +453,17 @@ namespace commandline
     }
 
     /**
-     * Check if the given option is a valid short or long command line option
+     * @brief Check if the given option is a valid short or long command line
+     *        option.
+     * 
+     * @details This is used to speed up a check since an option struct is
+     *           provided. This means that searching for the struct does not
+     *           need to be done.
+     * 
+     * @param[in] option An option struct.
+     * @param[in] opt    An option string.
+     * 
+     * @return True if the input is an option. False, otherwise.
      */
     bool interface::is_option(const option_t* option, std::string opt)
     {
@@ -369,7 +471,11 @@ namespace commandline
     }
 
     /**
-     * Check if the given option is a valid short command line option
+     * @brief Check if the given option is a valid short command line option.
+     * 
+     * @param[in] opt An option string.
+     * 
+     * @return True if the input is an option. False, otherwise.
      */
     bool interface::is_short_option(std::string opt)
     {
@@ -378,7 +484,16 @@ namespace commandline
     }
 
     /**
-     * Check if the given option is a valid short command line option
+     * @brief Check if the given option is a valid short command line option.
+     * 
+     * @details This is used to speed up a check since an option struct is
+     *           provided. This means that searching for the struct does not
+     *           need to be done.
+     * 
+     * @param[in] option An option struct.
+     * @param[in] opt    An option string.
+     * 
+     * @return True if the input is an option. False, otherwise.
      */
     bool interface::is_short_option(const option_t* option, std::string opt)
     {
@@ -386,7 +501,11 @@ namespace commandline
     }
 
     /**
-     * Check if the given option is a valid long command line option
+     * @brief Check if the given option is a valid long command line option.
+     * 
+     * @param[in] opt An option string.
+     * 
+     * @return True if the input is an option. False, otherwise.
      */
     bool interface::is_long_option(std::string opt)
     {
@@ -395,11 +514,19 @@ namespace commandline
     }
 
     /**
-     * Check if the given option is a valid long command line option
+     * @brief Check if the given option is a valid long command line option.
+     * 
+     * @details This is used to speed up a check since an option struct is
+     *           provided. This means that searching for the struct does not
+     *           need to be done.
+     * 
+     * @param[in] option An option struct.
+     * @param[in] opt    An option string.
+     * 
+     * @return True if the input is an option. False, otherwise.
      */
     bool interface::is_long_option(const option_t* option, std::string opt)
     {
         return (option && (this->extract_option(opt) == option->longopt));
     }
-
 }
