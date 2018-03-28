@@ -3,6 +3,9 @@
  * @file notification.hpp
  * @author Gabriel Gonzalez
  * 
+ * @note Add a --gravity option to indicate where to put the notification. The
+ *       default currently is the top right.
+ * 
  * @brief The interface for the Aria notification bubble.
  * -----------------------------------------------------------------------------
  */
@@ -238,6 +241,14 @@ protected:
     std::string fix_color(std::string& color);
 
     /**
+     * @brief Determine the screen resolution for monitor 0 from 
+     * 
+     * @param[out] width  The width of the monitor.
+     * @param[out] height The height of the monitor.
+     */
+    int get_screen_resolution(int& width, int& height);
+
+    /**
      * @brief Check if the color string is in a hex format.
      * 
      * @param[in] color The color string to check.
@@ -268,20 +279,59 @@ private:
      */
     static void cleanup(int sig);
 
-    Gtk::Box m_bubble;
-    Gtk::Box m_icon;
-    Gtk::Box m_text;
-    Gdk::RGBA m_background;
-    double m_opacity;
-    int m_width;
-    int m_height;
-    int m_xpos;
-    int m_ypos;
-    int m_curve;
-    int m_margin_top;
-    int m_margin_bottom;
-    int m_margin_left;
-    int m_margin_right;
+    /**
+     * @brief Main container for the icon and text containers.
+     * 
+     * @details This is added to the notification object, which is a derived
+     *          class of a GtkWindow.
+     */
+    Gtk::Box bubble_;
+
+    /**
+     * @brief Container for the icon.
+     */
+    Gtk::Box icon_;
+
+    /**
+     * @brief Container for the title and body text.
+     */
+    Gtk::Box text_;
+
+    /**
+     * @brief Background color of the notification bubble.
+     * 
+     * @details Using this type, instead of a string, allows for using the
+     *          methods: get_red(), get_green(), and get_blue() which is used
+     *          when drawing the notification bubble.
+     */
+    Gdk::RGBA background_;
+
+    /**
+     * @brief Width of the notification bubble.
+     */
+    int width_;
+
+    /**
+     * @brief Height of the notification bubble.
+     */
+    int height_;
+
+    /**
+     * @brief X-position, on screen, of where the notification bubble will be
+     *        displayed.
+     */
+    int xpos_;
+
+    /**
+     * @brief Y-position, on screen, of where the notification bubble will be
+     *        displayed.
+     */
+    int ypos_;
+
+    /**
+     * @brief Curvature of the corners on the notification bubble.
+     */
+    int curve_;
 };
 
 ARIA_NAMESPACE_END

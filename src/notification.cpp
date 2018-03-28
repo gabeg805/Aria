@@ -11,12 +11,15 @@
 #include "sharedmem.hpp"
 #include "commandline.hpp"
 #include "config.hpp"
+#include "util.hpp"
 #include <gtkmm.h>
 #include <gdkmm.h>
 #include <time.h>
 #include <unistd.h>
 #include <pangomm/fontdescription.h>
 #include <sys/stat.h>
+#include <X11/Xlib.h>
+#include <X11/extensions/Xrandr.h>
 #include <cstdlib>
 #include <csignal>
 #include <iostream>
@@ -31,28 +34,21 @@ ARIA_NAMESPACE
  */
 notification::notification() :
     Gtk::Window(Gtk::WINDOW_POPUP),
-    m_bubble(Gtk::ORIENTATION_HORIZONTAL),
-    m_icon(Gtk::ORIENTATION_VERTICAL),
-    m_text(Gtk::ORIENTATION_VERTICAL),
-    m_background()
+    bubble_(Gtk::ORIENTATION_HORIZONTAL),
+    icon_(Gtk::ORIENTATION_VERTICAL),
+    text_(Gtk::ORIENTATION_VERTICAL),
+    background_(),
+    width_(0),
+    height_(0),
+    xpos_(0),
+    ypos_(0),
+    curve_(0)
 {
-    this->m_opacity = 0;
-    this->m_width = 0;
-    this->m_height = 0;
-    this->m_xpos = 0;
-    this->m_ypos = 0;
-    this->m_curve = 0;
-    this->m_margin_top = 0;
-    this->m_margin_bottom = 0;
-    this->m_margin_left = 0;
-    this->m_margin_right = 0;
-
     this->set_decorated(false);
     this->set_app_paintable(true);
     this->signal_draw().connect(sigc::mem_fun(*this, &notification::on_draw));
     this->signal_screen_changed().connect(sigc::mem_fun(*this, &notification::on_screen_changed));
     this->on_screen_changed(get_screen());
-
     std::signal(SIGINT,  cleanup);
     std::signal(SIGQUIT, cleanup);
     std::signal(SIGTERM, cleanup);
@@ -150,15 +146,15 @@ int notification::build(commandline::interface& cli)
  */
 int notification::show(void)
 {
-    this->m_icon.set_halign(Gtk::ALIGN_CENTER);
-    this->m_icon.set_valign(Gtk::ALIGN_CENTER);
-    this->m_text.set_halign(Gtk::ALIGN_CENTER);
-    this->m_text.set_valign(Gtk::ALIGN_CENTER);
-    this->m_bubble.set_halign(Gtk::ALIGN_CENTER);
-    this->m_bubble.set_valign(Gtk::ALIGN_CENTER);
-    this->m_bubble.pack_start(this->m_icon);
-    this->m_bubble.pack_start(this->m_text);
-    this->add(this->m_bubble);
+    this->icon_.set_halign(Gtk::ALIGN_CENTER);
+    this->icon_.set_valign(Gtk::ALIGN_CENTER);
+    this->text_.set_halign(Gtk::ALIGN_CENTER);
+    this->text_.set_valign(Gtk::ALIGN_CENTER);
+    this->bubble_.set_halign(Gtk::ALIGN_CENTER);
+    this->bubble_.set_valign(Gtk::ALIGN_CENTER);
+    this->bubble_.pack_start(this->icon_);
+    this->bubble_.pack_start(this->text_);
+    this->add(this->bubble_);
     this->show_all_children();
     this->resize();
     this->reposition();
@@ -181,17 +177,17 @@ int notification::show(void)
 int notification::resize(void)
 {
     int junk;
-    if (!this->m_width)
+    if (!this->width_)
     {
-        this->m_bubble.get_preferred_width(junk, this->m_width);
-        this->m_width += this->m_curve;
+        this->bubble_.get_preferred_width(junk, this->width_);
+        this->width_ += this->curve_;
     }
-    if (!this->m_height)
+    if (!this->height_)
     {
-        this->m_bubble.get_preferred_height(junk, this->m_height);
-        this->m_height += this->m_curve;
+        this->bubble_.get_preferred_height(junk, this->height_);
+        this->height_ += this->curve_;
     }
-    this->set_size_request(this->m_width, this->m_height);
+    this->set_size_request(this->width_, this->height_);
     return 0;
 }
 
@@ -208,15 +204,21 @@ int notification::resize(void)
  */
 int notification::reposition(void)
 {
-    struct SharedMemType data = {.id   = getpid(),
-                                 .time = time(0),
-                                 .x    = this->m_xpos,
-                                 .y    = this->m_ypos,
-                                 .w    = this->m_width,
-                                 .h    = this->m_height};
+    int x = 0;
+    int y = 0;
+    int w = this->width_;
+    int h = this->height_;
+    int xpixels;
+    int ypixels;
+    if (!this->get_screen_resolution(xpixels, ypixels))
+    {
+        x = xpixels - (this->width_ + this->xpos_);
+        y = this->ypos_;
+    }
+    struct SharedMemType data = {.id=getpid(), .time=time(0), .x=x, .y=y, .w=w,
+                                 .h=h};
     AriaSharedMem::add(&data, 10);
-    data.x = (1920 - data.w) - data.x;
-    this->move(data.x, data.y);
+    this->move(x, y);
     return 0;
 }
 
@@ -330,19 +332,13 @@ int notification::set_text(std::string text, std::string font, std::string size)
     fd.set_family(font);
     fd.set_size(std::stoi(size) * PANGO_SCALE);
 
-    size_t length = 2;
-    for(size_t i=0; (i = text.find("\\", i)) != std::string::npos; )
-    {
-        text.replace(i, length, "\n");
-        i += length;
-    }
-
+    util::replace_all(text, "\\", "\n");
     label->set_use_markup(true);
     label->set_markup(text);
     label->set_line_wrap();
     label->override_font(fd);
     label->set_halign(Gtk::ALIGN_START);
-    this->m_text.pack_start(*label, Gtk::PACK_SHRINK);
+    this->text_.pack_start(*label, Gtk::PACK_SHRINK);
 
     return 0;
 }
@@ -394,7 +390,7 @@ int notification::set_font(std::string& font)
  * @return 0 on success. -1 if an invalid key is supplied. See
  *         set_from_config(string, string) for any other return value.
  */
-wint notification::set_font_size(const std::string key, std::string& size)
+int notification::set_font_size(const std::string key, std::string& size)
 {
     if ((key != "title") && (key != "body"))
     {
@@ -438,8 +434,8 @@ int notification::set_notify_icon(std::string& path, std::string& spacing)
     }
 
     Gtk::Image* icon = Gtk::manage(new Gtk::Image(path));
-    this->m_icon.pack_start(*icon, Gtk::PACK_SHRINK);
-    this->m_bubble.set_spacing(s);
+    this->icon_.pack_start(*icon, Gtk::PACK_SHRINK);
+    this->bubble_.set_spacing(s);
 
     return 0;
 }
@@ -490,11 +486,11 @@ int notification::set_notify_size(std::string& width, std::string& height)
 {
     if (!width.empty())
     {
-        this->m_width = std::stoi(width);
+        this->width_ = std::stoi(width);
     }
     if (!height.empty())
     {
-        this->m_height = std::stoi(height);
+        this->height_ = std::stoi(height);
     }
     return 0;
 }
@@ -517,11 +513,11 @@ int notification::set_notify_position(std::string& xpos, std::string& ypos)
 {
     if (!xpos.empty())
     {
-        this->m_xpos = std::stoi(xpos);
+        this->xpos_ = std::stoi(xpos);
     }
     if (!ypos.empty())
     {
-        this->m_ypos = std::stoi(ypos);
+        this->ypos_ = std::stoi(ypos);
     }
     return 0;
 }
@@ -602,8 +598,8 @@ int notification::set_color(const std::string key, std::string& color)
 
     if (key == "background")
     {
-        this->m_background.set(color);
-        this->override_background_color(this->m_background, flag);
+        this->background_.set(color);
+        this->override_background_color(this->background_, flag);
     }
     else if (key == "foreground")
     {
@@ -641,8 +637,7 @@ int notification::set_opacity(std::string& opacity)
     {
         return -2;
     }
-    this->m_opacity = o;
-    // Gtk::Window::set_opacity(std::stod(opacity));
+    this->background_.set_alpha(o);
     return 0;
 }
 
@@ -669,7 +664,7 @@ int notification::set_notify_curve(std::string& curve)
     {
         return -2;
     }
-    this->m_curve = c;
+    this->curve_ = c;
     return 0;
 }
 
@@ -731,10 +726,10 @@ int notification::set_notify_margin(std::string& margin, std::string& mtop,
         }
     }
 
-    this->m_bubble.set_margin_top(mt);
-    this->m_bubble.set_margin_bottom(mb);
-    this->m_bubble.set_margin_start(ml);
-    this->m_bubble.set_margin_end(mr);
+    this->bubble_.set_margin_top(mt);
+    this->bubble_.set_margin_bottom(mb);
+    this->bubble_.set_margin_start(ml);
+    this->bubble_.set_margin_end(mr);
 
     return 0;
 }
@@ -782,6 +777,59 @@ std::string notification::fix_color(std::string& color)
 }
 
 /**
+ * @brief Determine the screen resolution for monitor 0 from 
+ * 
+ * @param[out] width  The width of the monitor.
+ * @param[out] height The height of the monitor.
+ * 
+ * @return 0 on success, and width and height will be populated. If any
+ *         other value is returned, width and height will be in an
+ *         undetermined state.
+ */
+int notification::get_screen_resolution(int& width, int& height)
+{
+    char* display;
+    Display* xopen;
+    XRRScreenResources* screen;
+    if (!(display=getenv("DISPLAY")))
+    {
+        fprintf(stderr, "Get DISPLAY environment variable error.\n");
+        return -1;
+    }
+    if (!(xopen=XOpenDisplay(display)))
+    {
+        fprintf(stderr, "X Open Display error.\n");
+        return -2;
+    }
+    auto window = DefaultRootWindow(xopen);
+    if (!(screen=XRRGetScreenResources(xopen, window)))
+    {
+        fprintf(stderr, "XRR Get Screen Resources error.\n");
+        return -3;
+    }
+
+    /* Set screen dimensions for the monitor at x=0 */
+    int          num = screen->ncrtc;
+    int          i;
+    XRRCrtcInfo* info;
+    for (i=0; i < num; i++)
+    {
+        info = XRRGetCrtcInfo(xopen, screen, screen->crtcs[i]);
+        if (info->x == 0)
+        {
+            width  = info->width;
+            height = info->height;
+            XRRFreeCrtcInfo(info);
+            break;
+        }
+        XRRFreeCrtcInfo(info);
+    }
+    XRRFreeScreenResources(screen);
+
+    return 0;
+}
+
+/**
  * @brief Check if the color string is in a hex format.
  * 
  * @param[in] color The color string to check.
@@ -826,14 +874,14 @@ void notification::cleanup(int sig)
 bool notification::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 {
     Glib::RefPtr<Gdk::Screen> screen = this->get_screen();
-    double width  = this->m_width;
-    double height = this->m_height;
-    double curve  = this->m_curve;
+    double width  = this->width_;
+    double height = this->height_;
+    double curve  = this->curve_;
     double deg    = M_PI / 180.0;
-    double red    = this->m_background.get_red();
-    double green  = this->m_background.get_green();
-    double blue   = this->m_background.get_blue();
-    double alpha  = this->m_opacity;
+    double red    = this->background_.get_red();
+    double green  = this->background_.get_green();
+    double blue   = this->background_.get_blue();
+    double alpha  = this->background_.get_alpha();
     cr->save();
     cr->set_line_width(0);
     cr->begin_new_path();

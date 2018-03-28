@@ -16,7 +16,7 @@ SHAREDIR = $(HOME)/.local/share/$(PROJECT)
 # Compiler settings
 CC      = g++
 CPPFLAGS  = -g -Wall -std=c++14 $(DEFINES)
-LIBS    = -lX11 -I $(INCDIR) `pkg-config $(PKGS) --cflags --libs`
+LIBS    = -lX11 -lXrandr -I $(INCDIR) `pkg-config $(PKGS) --cflags --libs`
 PKGS    = gtkmm-3.0
 DEFINES = -DPROGRAM="\"$(PROJECT)\"" -DARIA_CONFIG_FILE="\"$(SHAREDIR)/$(PROJECT).conf\""
 
