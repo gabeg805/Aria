@@ -283,9 +283,9 @@ int notification::set_title(std::string& title, std::string& font, std::string& 
 }
 
 /**
- * @brief Set the title of the notification bubble.
+ * @brief Set the body of the notification bubble.
  * 
- * @param[in] title The title of the notification bubble.
+ * @param[in] body The title of the notification bubble.
  * @param[in] font  The font to use for the title.
  * @param[in] size  The font size for the title.
  * 

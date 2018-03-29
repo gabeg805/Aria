@@ -148,9 +148,9 @@ protected:
     /**
      * @brief Set the title of the notification bubble.
      * 
-     * @param[in] title The title of the notification bubble.
-     * @param[in] font  The font to use for the title.
-     * @param[in] size  The font size for the title.
+     * @param[in] body The title of the notification bubble.
+     * @param[in] font The font to use for the title.
+     * @param[in] size The font size for the title.
      */
     int set_body(std::string& body, std::string& font, std::string& size);
 

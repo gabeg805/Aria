@@ -29,7 +29,9 @@ namespace commandline
     const size_t kArgumentNameLength = 32;
 
     /**
-     * @enum The type of argument for an option.
+     * @enum argument_t
+     * 
+     * @brief The type of argument for an option.
      */
     enum argument_t
     {
@@ -138,7 +140,7 @@ namespace commandline
          * @param[in]     option   Data structure for an option.
          * @param[in]     arg      Argument list pointer, pointing to the
          *                         current command line option.
-         * @param[in/out] listflag Used to set the list flag if a list argument
+         * @param[in,out] listflag Used to set the list flag if a list argument
          *                         is found.
          */
         char** parse_argument(const option_t* option, char** arg, bool& listflag);
@@ -147,10 +149,10 @@ namespace commandline
          * @brief Check if there is a list argument, and if there is, store the
          *        argument(s).
          * 
-         * @param[in      arg      Argument list pointer, pointing to the
+         * @param[in]     arg      Argument list pointer, pointing to the
          *                         current argument.
-         * @param[in      key      The key used to set a value in m_table.
-         * @param[in/out] listflag A flag indicating if the previously found
+         * @param[in]     key      The key used to set a value in m_table.
+         * @param[in,out] listflag A flag indicating if the previously found
          *                         option contains list type arguments.
          */
         bool parse_list_argument(char** arg, std::string key, bool& listflag);

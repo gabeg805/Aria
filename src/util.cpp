@@ -13,8 +13,9 @@ ARIA_NAMESPACE
 /**
  * @brief Replace all instances of a subtring in a string.
  * 
- * @param[in/out] text    The text to replace the substring in.
- * @param[in]     replace The string to put in place of where the substring is.
+ * @param[in,out] text    The text to replace the substring in.
+ * @param[in]     find    The string to find in the input string.
+ * @param[in]     replace The string to replace the substring with.
  * 
  * @return The input string to replace. This function modifies the input string
  *         so capturing the ouput is redundant.

@@ -1,2 +1,4 @@
 aria
 *.o
+doc/html
+doc/latex

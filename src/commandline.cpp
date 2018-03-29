@@ -2,6 +2,8 @@
  * @file commandline.cpp
  * @author Gabriel Gonzalez
  * 
+ * @note This utility expects "PROGRAM" to be a preprocessor macro, so that
+ *       printing the program usage and displaying any errors works as expected.
  * @note Test optional and list argument type.  It looks like the list argument
  *       can act as an optional argument as well.
  * @note Check if when checking for long option and finding long option, it
@@ -9,9 +11,6 @@
  * 
  * @brief A command line interface utility to parse options, print usage, and
  *        notify the user when an error occurs.
- * 
- * @note This utility expects "PROGRAM" to be #define-d, so that printing the
- *       program usage and displaying any errors works as expected.
  */
 
 #include "commandline.hpp"
@@ -185,7 +184,7 @@ namespace commandline
      * @param[in]     option   Data structure for an option.
      * @param[in]     arg      Argument list pointer, pointing to the current
      *                         command line option.
-     * @param[in/out] listflag Used to set the list flag if a list argument is
+     * @param[in,out] listflag Used to set the list flag if a list argument is
      *                         found.
      * 
      * @return The pointer to the current argument in the argument list. NULL if
@@ -240,10 +239,10 @@ namespace commandline
      * @details This function is meant to be called multiple times on different
      *          points of the argument list pointer.
      * 
-     * @param[in      arg      Argument list pointer, pointing to the current
+     * @param[in]     arg      Argument list pointer, pointing to the current
      *                         argument.
-     * @param[in      key      The key used to set a value in m_table.
-     * @param[in/out] listflag A flag indicating if the previously found option
+     * @param[in]     key      The key used to set a value in m_table.
+     * @param[in,out] listflag A flag indicating if the previously found option
      *                         contains list type arguments.
      * 
      * @return True if the previously found option has a list argument
