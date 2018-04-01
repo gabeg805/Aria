@@ -55,8 +55,33 @@ You can also display an icon next to the text.
 ./aria -t "<b>Portugal. The Man</b>" -b "Feel It Still" -i "/path/to/icon.jpg"
 ```
 
+## Configure
+
+To configure the notification bubble, you can either use the command line
+options, or, you can modify the file under ~/.local/share/aria. Running the
+following command will add the configuration file to the aforementioned
+directory:
+```
+make configure
+```
+
+This is done by default
+
 ## Install
 
+To install the notification bubble to your system, run:
+```
+make
+make install
+```
+
+The first command will compile the source code and copy the configuration file
+to your home. The second command installs the program to your system.
 
 ## Uninstall
+
+To uninstall the notification bubbble, run:
+```
+make uninstall
+```
 

@@ -29,7 +29,7 @@ MEMMAP = /tmp/$(PROJECT)map
 
 # ------------------------------------------------------------------------------
 # Default target
-all: $(PROJECT)
+all: $(PROJECT) configure
 
 # Compile targets
 $(PROJECT): $(OBJ)
