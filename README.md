@@ -30,7 +30,7 @@ able to configure settings such as:
 ## Example
 
 A list of examples will be shown below, however, if you have any questions, use
-the _--help_ option.
+the *--help* option.
 
 To fully test out the majority of the options that Aria possesses, you can run:
 ```
@@ -45,7 +45,7 @@ following arguments in the command line:
 ```
 
 Aria can take markup text, however, so if you want the title in bold, you can
-simply add _<b>...</b>_ bold tags.
+simply add html bold tags.
 ```
 ./aria -t "<b>Important</b>" -b "Here is the message."
 ```
@@ -58,14 +58,14 @@ You can also display an icon next to the text.
 ## Configure
 
 To configure the notification bubble, you can either use the command line
-options, or, you can modify the file under ~/.local/share/aria. Running the
+options, or, you can modify the file under *~/.local/share/aria*. Running the
 following command will add the configuration file to the aforementioned
 directory:
 ```
 make configure
 ```
 
-This is done by default
+This is done by default, when you run *make*.
 
 ## Install
 
