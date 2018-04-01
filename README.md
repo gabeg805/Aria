@@ -12,6 +12,7 @@ able to configure settings such as:
 - Y-coordinate of where to put the notification on the screen.
 - Width of the notification.
 - Height of the notification.
+- Gravity of the notification.
 - Opacity of the notification.
 - Background color.
 - Foreground color.
@@ -31,8 +32,14 @@ able to configure settings such as:
 A list of examples will be shown below, however, if you have any questions, use
 the _--help_ option.
 
-One of the simplest ways to use Aria is to display text in the title and
-body. This can be done with the following arguments in the command line:
+To fully test out the majority of the options that Aria possesses, you can run:
+```
+make test
+```
+
+If you wanted to stick with simpler examples, one of the simplest ways to use
+Aria is to display text in the title and body. This can be done with the
+following arguments in the command line:
 ```
 ./aria -t "Title" -b "Body"
 ```
@@ -47,7 +54,6 @@ You can also display an icon next to the text.
 ```
 ./aria -t "<b>Portugal. The Man</b>" -b "Feel It Still" -i "/path/to/icon.jpg"
 ```
-
 
 ## Install
 
