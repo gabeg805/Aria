@@ -8,35 +8,34 @@
  * 
  * @section DESCRIPTION
  * 
- * The Aria notification bubble is a highly customizable program wherein a user
- * is able to configure settings such as:
- *   - Title and body
- *   - Font
- *   - Font size for the title and body
- *   - Icon
- *   - Amount of time to display the notification
- *   - X and Y-position on the screen
- *   - Width and height of the notification bubble
- *   - Background and foreground color
- *   - Opacity of the notification bubble
- *   - Curvature of the corners of the notification bubble
- *   - Margin (top, bottom, left and right)
- *   - Spacing between the icon and the text
+ * @details The Aria notification bubble is a highly customizable program
+ *          wherein a user is able to configure settings such as:
  * 
- * Much of the above settings are defined in the configuration and, as a result,
- * do not need to be specified.
+ *            - Title and body
+ *            - Font
+ *            - Font size for the title and body
+ *            - Icon
+ *            - Amount of time to display the notification
+ *            - X and Y-position on the screen
+ *            - Width and height of the notification bubble
+ *            - Background and foreground color
+ *            - Opacity of the notification bubble
+ *            - Curvature of the corners of the notification bubble
+ *            - Margin (top, bottom, left and right)
+ *            - Spacing between the icon and the text
+ * 
+ *          Much of the above settings are defined in the configuration and, as
+ *          a result, do not need to be specified.
  */
 
 #include "commandline.hpp"
 #include "notification.hpp"
 #include <gtkmm.h>
 
-using namespace aria;
-
 /**
- * Create and display the Aria notification bubble.
+ * @brief Create and display the Aria notification bubble.
  * 
- * @return Return 0 on success and any other value is an error state.
+ * @return 0 on success. Any other value is an error state.
  */
 int main(int argc, char** argv)
 {
