@@ -35,7 +35,7 @@
 /**
  * @brief Create and display the Aria notification bubble.
  * 
- * @return 0 on success. Any other value is an error state.
+ * @return If successful, return 0. Any other value is an error state.
  */
 int main(int argc, char** argv)
 {
@@ -50,6 +50,7 @@ int main(int argc, char** argv)
         {"-Y",  "--ypos",          "pos",         commandline::required_argument, "Y-coordinate of where to put the notification on the screen."},
         {"-W",  "--width",         "width",       commandline::required_argument, "Width of the notification."},
         {"-H",  "--height",        "height",      commandline::required_argument, "Height of the notification."},
+        {"-g",  "--gravity",       "gravity",     commandline::required_argument, "Location of the origin (0,0) point. [Default: top-right]"},
         {"-o",  "--opacity",       "opacity",     commandline::required_argument, "Opacity of the notification. [Default: 0.5]"},
         {"-bg", "--background",    "color",       commandline::required_argument, "Background color. [Default: 0xffa5d0]"},
         {"-fg", "--foreground",    "color",       commandline::required_argument, "Foreground color. [Default: 0xffffff]"},
@@ -73,10 +74,12 @@ int main(int argc, char** argv)
     Glib::RefPtr<Gtk::Application> app = Gtk::Application::create("");
     aria::notification Aria;
     int status;
-    if ((status=Aria.build(cli)) != 0) {
+    if ((status=Aria.build(cli)) != 0)
+    {
         return status;
     }
-    if ((status=Aria.show()) != 0) {
+    if ((status=Aria.show()) != 0)
+    {
         return status;
     }
 

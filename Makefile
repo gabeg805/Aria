@@ -52,19 +52,19 @@ clean :
 	@rm -v -f $(OBJ)
 	@rm -v -f $(OBJDIR)/*
 	@rm -v -f $(MEMMAP)
-	@rm -f -r $(DOCDIR)/html
-	@rm -f -r $(DOCDIR)/latex
+	@rm -v -f -r $(DOCDIR)/*/
 
 doc: $(DOC)
 	@doxygen $(DOC)
 
-# Fix opacity and title/body size
 test: $(PROJECT)
-	$(BUILDDIR)/$(PROJECT) --title "Title" --body "Body" \
-		--width 200 --height 100 \
-		--xpos  700 --ypos   400 \
-		--time    5 \
-		--opacity 0.5 \
-		--margin 40 \
-		--title-size 24 --body-size 16 \
-		--background "#00a866" --foreground "#ffffff"
+	$(BUILDDIR)/$(PROJECT) \
+		--title="<b>Import Message</b>" \
+		--body="Here is the body of the message." \
+		--icon="/usr/share/icons/hicolor/32x32/apps/firefox.png" \
+		--xpos=700 --ypos=400 \
+		--time=3 \
+		--opacity=0.6 \
+		--background="#ffa500" --foreground="#ffffff" \
+		--margin=10 \
+		--title-size=18 --body-size=14

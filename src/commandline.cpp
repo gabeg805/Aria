@@ -2,9 +2,6 @@
  * @file commandline.cpp
  * @author Gabriel Gonzalez
  * 
- * @note Check if when checking for long option and finding long option, it
- *       compares only the stuff before the equals.
- * 
  * @brief A command line interface utility to parse options, print usage, and
  *        notify the user when an error occurs.
  */
@@ -33,19 +30,19 @@ namespace commandline
         printf("Options:");
         char arg[commandline::kArgumentNameLength];
 
-        for (option_t opt : this->m_options)
+        for (option_t data : this->m_options)
         {
-            if (opt.name.empty())
+            if (data.name.empty())
             {
                 arg[0] = '\0';
             }
             else
             {
-                snprintf(arg, sizeof(arg), "=<%s>", opt.name.c_str());
+                snprintf(arg, sizeof(arg), "=<%s>", data.name.c_str());
             }
-            printf("\n    %s, %s%s\n", opt.shortopt.c_str(),
-                   opt.longopt.c_str(), arg);
-            printf("        %s\n", opt.desc.c_str());
+            printf("\n    %s, %s%s\n", data.shortopt.c_str(),
+                   data.longopt.c_str(), arg);
+            printf("        %s\n", data.desc.c_str());
         }
     }
 
@@ -58,26 +55,19 @@ namespace commandline
      */
     void interface::parse(char** argv)
     {
-        char**          arg      = argv+1;
-        std::string     key      = *arg;
+        char**          argp     = argv+1;
+        std::string     option   = *argp;
         bool            listflag = false;
-        const option_t* option;
+        const option_t* data;
 
-        for ( ; *arg != NULL; ++arg)
+        for ( ; *argp != NULL; ++argp)
         {
-            if (this->parse_list_argument(arg, key, listflag))
+            if (this->parse_list_argument(argp, option, listflag))
             {
                 continue;
             }
-
-            key = *arg;
-            if (!(option=this->find_option(key)))
-            {
-                fprintf(stderr, "%s: Invalid option '%s'\n", PROGRAM,
-                        key.c_str());
-                exit(1);
-            }
-            arg = this->parse_argument(option, arg, listflag);
+            option = this->parse_option(&data, *argp);
+            argp   = this->parse_argument(data, argp, listflag);
         }
     }
 
@@ -114,9 +104,9 @@ namespace commandline
 
     /**
      */
-    int interface::set(std::string opt, std::string value)
+    int interface::set(std::string option, std::string value)
     {
-        std::string key = this->to_key(opt);
+        std::string key = this->to_key(option);
         if (key.empty())
         {
             return -1;
@@ -127,85 +117,120 @@ namespace commandline
 
     /**
      */
-    std::string interface::get(std::string opt)
+    std::string interface::get(std::string option)
     {
-        return (this->has(opt)) ? this->m_table[this->to_key(opt)].at(0) : "";
+        return (this->has(option)) ?
+            this->m_table[this->to_key(option)].at(0) : "";
     }
 
     /**
      */
-    bool interface::has(std::string opt)
+    bool interface::has(std::string option)
     {
-        return (this->m_table.find(this->to_key(opt)) != this->m_table.end());
+        return (this->m_table.find(this->to_key(option))
+                != this->m_table.end());
     }
 
     /**
-     * @details The most complicated sections in this are the optional and
-     *          required argument type sections.
-     * 
-     *          If an optional_argument type, check if the current option is a
-     *          short option, and if the next string in the argument pointer is
-     *          an option. You check for a short option because a long option
-     *          typically has an argument, and you check the next string in the
-     *          argument pointer because if the next string is an option, in
-     *          conjunction with a short option, then there is no argument for
-     *          this option.
-     * 
-     *          If a required_argument type, if it's a short option, then the
-     *          next string in the argument pointer is the value. Otherwise,
-     *          it's a long option, so I need to extract the option and value
-     *          (from the form '--long-option=value').
-     * 
-     * @todo Test option_argument for a long option with no argument.
-     * @todo Test optional and list argument type.  It looks like the list argument
-     *       can act as an optional argument as well.
      */
-    char** interface::parse_argument(const option_t* option, char** arg,
+    char* interface::parse_option(const option_t** data, char* option)
+    {
+        if (!(*data=this->find_option(option)))
+        {
+            fprintf(stderr, "%s: Invalid option '%s'\n", PROGRAM, option);
+            exit(1);
+        }
+        return option;
+    }
+
+    /**
+     */
+    char** interface::parse_argument(const option_t* data, char** argp,
                                      bool& listflag)
     {
-        std::string key = *arg;
+        std::string key = *argp;
         std::string value;
-        if (!option)
+        if (!data)
         {
             return NULL;
         }
 
-        switch (option->argument)
+        switch (data->argument)
         {
         case commandline::no_argument:
-            if (option->longopt == "--help")
-            {
-                this->usage();
-                exit(0);
-            }
-            break;
+            this->parse_help_option(data);
+            return argp;
         case commandline::list_argument:
             listflag = true;
-            break;
-        case commandline::optional_argument:
-            if (this->is_short_option(option, key)
-                && this->is_option(*(arg+1)))
+            if (!*(argp+1))
             {
-                this->set(key, "");
-                break;
+                fprintf(stderr,
+                        "%s: No argument after option '%s' with list_argument type.\n",
+                        PROGRAM, *argp);
+                exit(1);
             }
+            return argp;
+        case commandline::optional_argument:
         case commandline::required_argument:
         default:
-            if (this->is_short_option(option, key))
+            if (this->is_long_option(data, key))
             {
-                ++arg;
-                value = *arg;
+                argp = this->parse_long_argument(argp, key, value);
+            }
+            else if (this->is_short_option(data, key))
+            {
+                argp = this->parse_short_argument(argp, value);
             }
             else
             {
-                value = this->extract_value(key);
-                key = this->extract_option(key);
+                fprintf(stderr,
+                        "%s: Unable to determine if '%s' is a long or short option.\n",
+                        PROGRAM, *argp);
+                exit(1);
             }
-            this->set(key, value);
             break;
         }
 
-        return arg;
+        this->set(key, value);
+        return argp;
+    }
+
+    /**
+     */
+    void interface::parse_help_option(const option_t* data)
+    {
+        if ((data->longopt == "--help") || (data->shortopt == "-?"))
+        {
+            this->usage();
+            exit(0);
+        }
+    }
+
+    /**
+     */
+    char** interface::parse_short_argument(char** argp, std::string& value)
+    {
+        char* next = *(argp+1);
+        if (next && !this->is_option(next))
+        {
+            value = next;
+            ++argp;
+        }
+        else
+        {
+            value = "";
+        }
+        return argp;
+    }
+
+    /**
+     */
+    char** interface::parse_long_argument(char** argp, std::string& key,
+                                          std::string& value)
+    {
+        value = this->extract_value(*argp);
+        key   = this->extract_option(*argp);
+        return argp;
     }
 
     /**
@@ -213,17 +238,17 @@ namespace commandline
      *          points of the argument list pointer, so as to capture all
      *          arguments of a list_argument type option.
      */
-    bool interface::parse_list_argument(char** arg, std::string key, bool& listflag)
+    bool interface::parse_list_argument(char** argp, std::string option, bool& listflag)
     {
         if (listflag)
         {
-            if (this->is_option(*arg))
+            if (this->is_option(*argp))
             {
                 listflag = false;
             }
             else
             {
-                this->set(key, *arg);
+                this->set(option, *argp);
             }
         }
         return listflag;
@@ -231,14 +256,14 @@ namespace commandline
 
     /**
      */
-    const option_t* interface::find_option(std::string opt)
+    const option_t* interface::find_option(std::string option)
     {
         optlist_t::const_iterator it;
         const option_t* ptr;
         for (it=this->m_options.cbegin(); it != this->m_options.cend(); ++it)
         {
             ptr = &(*it);
-            if (this->is_option(ptr, opt))
+            if (this->is_option(ptr, option))
             {
                 return ptr;
             }
@@ -248,63 +273,63 @@ namespace commandline
 
     /**
      */
-    std::string interface::extract(std::string opt, int field)
+    std::string interface::extract(std::string option, int field)
     {
         if ((field != 1) && (field != 2))
         {
             return "";
         }
+        if (option.find("=") == std::string::npos)
+        {
+            return (field == 1) ? option : "";
+        }
 
-        int length = opt.length();
+        int length = option.length();
         int i;
         for (i=0; i < length; ++i)
         {
-            if (opt[i] == '=')
+            if (option[i] == '=')
             {
                 break;
-            }
-            if ((i+1) == length)
-            {
-                return opt;
             }
         }
 
         if (field == 1)
         {
-            return opt.substr(0, i);
+            return option.substr(0, i);
         }
         ++i;
-        return opt.substr(i, length-i);
+        return option.substr(i, length-i);
     }
 
     /**
      */
-    std::string interface::extract_option(std::string opt)
+    std::string interface::extract_option(std::string option)
     {
-        return this->extract(opt, 1);
+        return this->extract(option, 1);
     }
 
     /**
      */
-    std::string interface::extract_value(std::string opt)
+    std::string interface::extract_value(std::string option)
     {
-        return this->extract(opt, 2);
+        return this->extract(option, 2);
     }
 
     /**
      */
-    std::string interface::to_short_option(std::string opt)
+    std::string interface::to_short_option(std::string option)
     {
-        const option_t* option = this->find_option(opt);
-        return (option) ? option->shortopt : "";
+        const option_t* data = this->find_option(option);
+        return (data) ? data->shortopt : "";
     }
 
     /**
      */
-    std::string interface::to_long_option(std::string opt)
+    std::string interface::to_long_option(std::string option)
     {
-        const option_t* option = this->find_option(opt);
-        return (option) ? option->longopt : "";
+        const option_t* data = this->find_option(option);
+        return (data) ? data->longopt : "";
     }
 
     /**
@@ -320,80 +345,82 @@ namespace commandline
      */
     std::string interface::to_key(std::string input)
     {
-        const option_t* option = NULL;
-        std::string opt;
+        const option_t* data = NULL;
+        std::string     option;
 
         if (input[0] != '-')
         {
             input.insert(0, "--");
-            if (!(option=this->find_option(input)))
+            if (!(data=this->find_option(input)))
             {
                 input.erase(0, 1);
             }
         }
 
-        if (!option && !(option=this->find_option(input)))
+        if (!data && !(data=this->find_option(input)))
         {
             return "";
         }
 
-        if (!option->longopt.empty())
+        if (!data->longopt.empty())
         {
-            opt = option->longopt.substr(2);
+            option = data->longopt.substr(2);
         }
-        else if (!option->shortopt.empty())
+        else if (!data->shortopt.empty())
         {
-            opt = option->shortopt.substr(1);
+            option = data->shortopt.substr(1);
         }
         else
         {
             return "";
         }
 
-        return opt;
+        return option;
     }
 
     /**
      */
-    bool interface::is_option(std::string opt)
+    bool interface::is_option(std::string option)
     {
-        return (this->is_short_option(opt) || this->is_long_option(opt));
+        return (this->is_short_option(option) || this->is_long_option(option));
     }
 
     /**
      */
-    bool interface::is_option(const option_t* option, std::string opt)
+    bool interface::is_option(const option_t* data, std::string option)
     {
-        return (this->is_short_option(option, opt) || this->is_long_option(option, opt));
+        return (this->is_short_option(data, option)
+                || this->is_long_option(data, option));
     }
 
     /**
      */
-    bool interface::is_short_option(std::string opt)
+    bool interface::is_short_option(std::string option)
     {
-        const option_t* option = this->find_option(opt);
-        return this->is_short_option(option, opt);
+        const option_t* data = this->find_option(option);
+        return this->is_short_option(data, option);
     }
 
     /**
      */
-    bool interface::is_short_option(const option_t* option, std::string opt)
+    bool interface::is_short_option(const option_t* data, std::string option)
     {
-        return (option && (opt == option->shortopt));
+        return (data && (option == data->shortopt));
     }
 
     /**
      */
-    bool interface::is_long_option(std::string opt)
+    bool interface::is_long_option(std::string option)
     {
-        const option_t* option = this->find_option(opt);
-        return this->is_long_option(option, opt);
+        const option_t* data = this->find_option(option);
+        return this->is_long_option(data, option);
     }
 
     /**
      */
-    bool interface::is_long_option(const option_t* option, std::string opt)
+    bool interface::is_long_option(const option_t* data, std::string option)
     {
-        return (option && (this->extract_option(opt) == option->longopt));
+        return (data && ((option == data->longopt)
+                || (this->extract_option(option) == data->longopt)));
     }
 }
