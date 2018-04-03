@@ -1,4 +1,5 @@
 /**
+ * -----------------------------------------------------------------------------
  * @file aria.cpp
  * @author Gabriel Gonzalez
  * 
@@ -26,6 +27,7 @@
  * 
  *          Much of the above settings are defined in the configuration and, as
  *          a result, do not need to be specified.
+ * -----------------------------------------------------------------------------
  */
 
 #include "commandline.hpp"

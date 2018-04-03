@@ -91,7 +91,8 @@ public:
      * @param[in] xpos X-position on the screen.
      * @param[in] ypos Y-position on the screen.
      */
-    int set_notify_position(std::string& xpos, std::string& ypos);
+    int set_notify_position(std::string& xpos, std::string& ypos,
+                            std::string& gravity);
 
     /**
      * @brief Set the notification background, foreground, and opacity.
@@ -129,12 +130,12 @@ protected:
      * @brief Resize the notification bubble to the desired size, if specified,
      *        or the preferred size, otherwise.
      */
-    int resize(void);
+    void resize(void);
 
     /**
      * @brief Move the notification bubble to the desired position.
      */
-    int reposition(void);
+    void reposition(void);
 
     /**
      * @brief Set the title of the notification bubble.
@@ -327,6 +328,11 @@ private:
      *        displayed.
      */
     int ypos_;
+
+    /**
+     * @brief Gravity of which corner to consider the origin (0, 0) point.
+     */
+    std::string gravity_;
 
     /**
      * @brief Curvature of the corners on the notification bubble.

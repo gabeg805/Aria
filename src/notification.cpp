@@ -78,6 +78,7 @@ int notification::build(commandline::interface& cli)
     std::string time         = cli.get("time");
     std::string xpos         = cli.get("xpos");
     std::string ypos         = cli.get("ypos");
+    std::string gravity      = cli.get("gravity");
     std::string width        = cli.get("width");
     std::string height       = cli.get("height");
     std::string background   = cli.get("background");
@@ -107,7 +108,7 @@ int notification::build(commandline::interface& cli)
     {
         return 3;
     }
-    if (this->set_notify_position(xpos, ypos) < 0)
+    if (this->set_notify_position(xpos, ypos, gravity) < 0)
     {
         return 4;
     }
@@ -171,10 +172,8 @@ int notification::show(void)
  * 
  *          If the width and/or height are provided on the command line, use
  *          those values without modifying them.
- * 
- * @return 0 on success.
  */
-int notification::resize(void)
+void notification::resize(void)
 {
     int junk;
     if (!this->width_)
@@ -187,8 +186,8 @@ int notification::resize(void)
         this->bubble_.get_preferred_height(junk, this->height_);
         this->height_ += this->curve_;
     }
+    printf("Request: (%d, %d)\n", this->width_, this->height_);
     this->set_size_request(this->width_, this->height_);
-    return 0;
 }
 
 /**
@@ -196,30 +195,37 @@ int notification::resize(void)
  * 
  * @details Add attributes into shared memory, determine the appropriate x-y
  *          positional values, and move the notification bubble.
- * 
- * @note Modify reposition to accurately determine data.y
- * @note Change 1920 to screen width.
- * 
- * @return 0 on success.
  */
-int notification::reposition(void)
+void notification::reposition(void)
 {
-    int x = 0;
-    int y = 0;
+    std::string g = this->gravity_;
     int w = this->width_;
     int h = this->height_;
+    int x = this->xpos_;
+    int y = this->ypos_;
     int xpixels;
     int ypixels;
     if (!this->get_screen_resolution(xpixels, ypixels))
     {
-        x = xpixels - (this->width_ + this->xpos_);
-        y = this->ypos_;
+        if ((g == "bottom-left") || (g == "bottom-right"))
+        {
+            y = ypixels - (h + y);
+        }
+        if ((g == "top-right") || (g == "bottom-right"))
+        {
+            x = xpixels - (w + x);
+        }
+        printf("Size: (%d, %d)\n", w, h);
+        printf("Gravity: %s\n", g.c_str());
     }
-    struct SharedMemType data = {.id=getpid(), .time=time(0), .x=x, .y=y, .w=w,
-                                 .h=h};
+    printf("Position: (%d, %d)\n", x, y);
+    this->xpos_ = x;
+    this->ypos_ = y;
+    struct SharedMemType data = {.id=getpid(), .time=time(0), .x=this->xpos_,
+                                 .y=this->ypos_, .w=this->width_,
+                                 .h=this->height_};
     AriaSharedMem::add(&data, 10);
-    this->move(x, y);
-    return 0;
+    this->move(this->xpos_, this->ypos_);
 }
 
 /**
@@ -504,12 +510,15 @@ int notification::set_notify_size(std::string& width, std::string& height)
  * @note Have bounds check, and get screen size here. Check if screen size is
  *       set first though.
  * 
- * @param[in] xpos X-position on the screen.
- * @param[in] ypos Y-position on the screen.
+ * @param[in] xpos    X-position on the screen.
+ * @param[in] ypos    Y-position on the screen.
+ * @param[in] gravity Which corner on screen to consider the (x=0,y=0) point.
  * 
- * @return 0 on success.
+ * @return 0 on success. Return -1 when unable to determine gravity from the
+ *         config file.
  */
-int notification::set_notify_position(std::string& xpos, std::string& ypos)
+int notification::set_notify_position(std::string& xpos, std::string& ypos,
+                                      std::string& gravity)
 {
     if (!xpos.empty())
     {
@@ -518,6 +527,14 @@ int notification::set_notify_position(std::string& xpos, std::string& ypos)
     if (!ypos.empty())
     {
         this->ypos_ = std::stoi(ypos);
+    }
+    if (gravity.empty() && (this->set_from_config("gravity", gravity) < 0))
+    {
+        return -1;
+    }
+    if (!gravity.empty())
+    {
+        this->gravity_ = gravity;
     }
     return 0;
 }
