@@ -58,12 +58,12 @@ configure: $(SHAREDIR)/$(PROJECT).conf
 doc: $(DOC)
 	@doxygen $(DOC)
 
-install: configure
-	@sudo cp -av $(PROJECT) /usr/bin/
+install:
+	@sudo cp -av $(PROJECT) /usr/local/bin/
 
 uninstall: clean
 	@rm -v -f -r $(LOCALSHAREDIR)
-	@sudo rm -v -f /usr/bin/$(PROJECT)
+	@sudo rm -v -f /usr/local/bin/$(PROJECT)
 
 test: $(PROJECT)
 	$(BUILDDIR)/$(PROJECT) \
